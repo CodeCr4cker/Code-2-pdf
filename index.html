@@ -20,7 +20,7 @@
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
       color: #ffffff;
       min-height: 100vh;
-      overflow-x: hidden; /* Prevent horizontal scroll on body */
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -144,7 +144,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr; /* Always single column */
+      grid-template-columns: 1fr;
       gap: 2rem;
       margin-bottom: 2rem;
     }
@@ -301,17 +301,17 @@
       font-size: 0.9rem;
       line-height: 1.6;
       max-height: 400px;
-      white-space: pre-wrap; /* Ensures text wraps */
-      word-wrap: break-word; /* Breaks long words */
-      max-width: 100%; /* Ensure pre element respects its container width */
-      overflow-x: auto; /* Add horizontal scrollbar if content is still too wide */
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
     }
 
     pre code {
       background: none !important;
       padding: 0 !important;
-      display: block; /* Ensure code block behaves as a block element */
-      width: 100%; /* Take full width of its parent */
+      display: block;
+      width: 100%;
     }
 
     /* Loading animation */
@@ -546,6 +546,35 @@
     .hljs-function { color: #f59e0b !important; }
     .hljs-number { color: #ef4444 !important; }
     .hljs-variable { color: #06b6d4 !important; }
+
+    /* Color scheme info */
+    .color-info {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .color-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
@@ -572,9 +601,9 @@
             </linearGradient>
           </defs>
         </svg>
-        CodeForge
+        CodeForge Pro
       </a>
-      <div class="tagline">Transform your code into beautiful PDFs</div>
+      <div class="tagline">Transform your code into beautiful, colorful PDFs</div>
     </header>
 
     <div class="container">
@@ -606,14 +635,18 @@
               <option value="php">PHP</option>
               <option value="ruby">Ruby</option>
               <option value="go">Go</option>
+              <option value="typescript">TypeScript</option>
+              <option value="kotlin">Kotlin</option>
+              <option value="swift">Swift</option>
+              <option value="rust">Rust</option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="bgColor">Background Color</label>
             <select id="bgColor">
-              <option value="black">Black</option>
-              <option value="white">White</option>
+              <option value="dark">Dark Theme</option>
+              <option value="light">Light Theme</option>
             </select>
           </div>
 
@@ -621,6 +654,36 @@
             <label for="fontSize">Font Size</label>
             <input id="fontSize" type="range" min="8" max="16" value="10" />
             <span id="fontSizeValue">10px</span>
+          </div>
+
+          <div class="color-info">
+            <strong>✨ PDF Color Scheme:</strong>
+            <div class="color-legend">
+              <div class="color-item">
+                <div class="color-dot" style="background: #7c3aed;"></div>
+                <span>Keywords</span>
+              </div>
+              <div class="color-item">
+                <div class="color-dot" style="background: #10b981;"></div>
+                <span>Strings</span>
+              </div>
+              <div class="color-item">
+                <div class="color-dot" style="background: #f59e0b;"></div>
+                <span>Functions</span>
+              </div>
+              <div class="color-item">
+                <div class="color-dot" style="background: #ef4444;"></div>
+                <span>Numbers</span>
+              </div>
+              <div class="color-item">
+                <div class="color-dot" style="background: #06b6d4;"></div>
+                <span>Variables</span>
+              </div>
+              <div class="color-item">
+                <div class="color-dot" style="background: #8b5cf6;"></div>
+                <span>Comments</span>
+              </div>
+            </div>
           </div>
 
           <button class="generate-btn" id="generateBtn">
@@ -631,16 +694,16 @@
               <path d="M16 17H8"/>
               <path d="M10 9H8"/>
             </svg>
-            Generate PDF
+            Generate Colorful PDF
           </button>
 
           <div class="loading" id="loading">
             <div class="spinner"></div>
-            <span>Generating PDF...</span>
+            <span>Generating colorful PDF...</span>
           </div>
 
           <div class="success" id="success">
-            <strong>Success!</strong> Your PDF has been generated and downloaded.
+            <strong>Success!</strong> Your colorful PDF has been generated and downloaded.
           </div>
         </div>
 
@@ -677,6 +740,147 @@
   </div>
 
   <script>
+    // Enhanced syntax highlighting colors for PDF
+    const SYNTAX_COLORS = {
+      keyword: { light: [128, 0, 128], dark: [124, 58, 237] }, // Purple
+      string: { light: [0, 128, 0], dark: [16, 185, 129] }, // Green
+      comment: { light: [128, 128, 128], dark: [139, 92, 246] }, // Gray/Purple
+      function: { light: [255, 140, 0], dark: [245, 158, 11] }, // Orange
+      number: { light: [255, 0, 0], dark: [239, 68, 68] }, // Red
+      variable: { light: [0, 0, 255], dark: [6, 182, 212] }, // Blue/Cyan
+      operator: { light: [139, 69, 19], dark: [251, 191, 36] }, // Brown/Yellow
+      type: { light: [0, 100, 0], dark: [34, 197, 94] }, // Dark green/Green
+      property: { light: [128, 0, 0], dark: [236, 72, 153] }, // Maroon/Pink
+      class: { light: [0, 0, 139], dark: [99, 102, 241] }, // Navy/Indigo
+      default: { light: [0, 0, 0], dark: [255, 255, 255] } // Black/White
+    };
+
+    // Token patterns for different languages
+    const TOKEN_PATTERNS = {
+      javascript: {
+        keyword: /\b(function|var|let|const|if|else|for|while|return|class|extends|import|export|async|await|try|catch|finally|throw|new|this|super|static|public|private|protected)\b/g,
+        string: /(["'`])(?:(?!\1)[^\\]|\\.)*\1/g,
+        comment: /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm,
+        function: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g,
+        number: /\b\d+\.?\d*\b/g,
+        operator: /[+\-*/=<>!&|%^~?:]/g,
+        property: /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g
+      },
+      python: {
+        keyword: /\b(def|class|if|else|elif|for|while|return|import|from|as|try|except|finally|with|lambda|and|or|not|in|is|None|True|False|global|nonlocal|pass|break|continue|yield|async|await)\b/g,
+        string: /(["'])(?:(?!\1)[^\\]|\\.)*\1|'''[\s\S]*?'''|"""[\s\S]*?"""/g,
+        comment: /#.*$/gm,
+        function: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+        number: /\b\d+\.?\d*\b/g,
+        operator: /[+\-*/=<>!%^~]/g,
+        property: /\.([a-zA-Z_][a-zA-Z0-9_]*)/g
+      },
+      java: {
+        keyword: /\b(public|private|protected|static|final|abstract|class|interface|extends|implements|if|else|for|while|do|switch|case|default|return|break|continue|try|catch|finally|throw|throws|new|this|super|package|import|void|int|double|float|boolean|char|String|long|short|byte)\b/g,
+        string: /(["'])(?:(?!\1)[^\\]|\\.)*\1/g,
+        comment: /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm,
+        function: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g,
+        number: /\b\d+\.?\d*[fFdDlL]?\b/g,
+        operator: /[+\-*/=<>!&|%^~?:]/g,
+        type: /\b([A-Z][a-zA-Z0-9_]*)\b/g,
+        property: /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g
+      },
+      cpp: {
+        keyword: /\b(int|double|float|char|bool|void|class|struct|enum|public|private|protected|static|const|virtual|override|if|else|for|while|do|switch|case|default|return|break|continue|try|catch|throw|new|delete|this|nullptr|auto|template|typename|namespace|using|include)\b/g,
+        string: /(["'])(?:(?!\1)[^\\]|\\.)*\1/g,
+        comment: /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm,
+        function: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+        number: /\b\d+\.?\d*[fFdDlL]?\b/g,
+        operator: /[+\-*/=<>!&|%^~?:]/g,
+        type: /\b([A-Z][a-zA-Z0-9_]*)\b/g,
+        property: /\.([a-zA-Z_][a-zA-Z0-9_]*)|->([a-zA-Z_][a-zA-Z0-9_]*)/g
+      },
+      html: {
+        keyword: /\b(html|head|body|div|span|p|a|img|ul|ol|li|h1|h2|h3|h4|h5|h6|table|tr|td|th|form|input|button|select|option|textarea|script|style|link|meta|title)\b/g,
+        string: /(["'])(?:(?!\1)[^\\]|\\.)*\1/g,
+        comment: /<!--[\s\S]*?-->/g,
+        function: /\b([a-zA-Z_$][a-zA-Z0-9_$-]*)\s*(?==)/g,
+        operator: /[=<>]/g,
+        property: /\b([a-zA-Z-]+)(?=\s*=)/g
+      },
+      css: {
+        keyword: /\b(color|background|font|margin|padding|border|width|height|display|position|top|left|right|bottom|z-index|opacity|transform|transition|animation|flex|grid)\b/g,
+        string: /(["'])(?:(?!\1)[^\\]|\\.)*\1/g,
+        comment: /\/\*[\s\S]*?\*\//g,
+        function: /([a-zA-Z-]+)\s*(?=\()/g,
+        number: /\b\d+\.?\d*(px|em|rem|%|vh|vw|pt|pc|in|cm|mm)?\b/g,
+        operator: /[{}:;]/g,
+        property: /\.([a-zA-Z_-][a-zA-Z0-9_-]*)|#([a-zA-Z_-][a-zA-Z0-9_-]*)/g
+      }
+    };
+
+    // Function to parse code and identify tokens
+    function parseCodeTokens(code, language) {
+      const tokens = [];
+      const patterns = TOKEN_PATTERNS[language] || TOKEN_PATTERNS.javascript;
+      
+      // Create a copy of the code to work with
+      let remainingCode = code;
+      let offset = 0;
+      
+      // Track all matches with their positions
+      const allMatches = [];
+      
+      Object.entries(patterns).forEach(([type, pattern]) => {
+        let match;
+        const regex = new RegExp(pattern.source, pattern.flags);
+        
+        while ((match = regex.exec(code)) !== null) {
+          allMatches.push({
+            type,
+            text: match[0],
+            start: match.index,
+            end: match.index + match[0].length
+          });
+        }
+      });
+      
+      // Sort matches by position
+      allMatches.sort((a, b) => a.start - b.start);
+      
+      // Remove overlapping matches (keep the first one)
+      const cleanMatches = [];
+      let lastEnd = 0;
+      
+      allMatches.forEach(match => {
+        if (match.start >= lastEnd) {
+          cleanMatches.push(match);
+          lastEnd = match.end;
+        }
+      });
+      
+      // Build final token array
+      let currentPos = 0;
+      cleanMatches.forEach(match => {
+        // Add text before the match as default
+        if (match.start > currentPos) {
+          tokens.push({
+            type: 'default',
+            text: code.substring(currentPos, match.start)
+          });
+        }
+        
+        // Add the matched token
+        tokens.push(match);
+        currentPos = match.end;
+      });
+      
+      // Add remaining text
+      if (currentPos < code.length) {
+        tokens.push({
+          type: 'default',
+          text: code.substring(currentPos)
+        });
+      }
+      
+      return tokens;
+    }
+
     // Create animated particles
     function createParticles() {
       const particles = document.getElementById('particles');
@@ -721,10 +925,9 @@
     codeInput.addEventListener('input', updatePreview);
     langSelect.addEventListener('change', updatePreview);
 
-    // Generate PDF
+    // Generate PDF with colorful syntax highlighting
     generateBtn.addEventListener('click', async () => {
       if (!codeInput.value.trim()) {
-        // More gentle error notification
         codeInput.style.borderColor = '#ef4444';
         codeInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
         setTimeout(() => {
@@ -734,7 +937,6 @@
         return;
       }
 
-      // Verify PDF library is loaded
       if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert('PDF library failed to load. Please check your internet connection.');
         return;
@@ -750,103 +952,123 @@
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
         const pdfHeading = document.getElementById('pdfHeading').value || 'Code Document';
         const language = langSelect.value;
-        const bgColor = bgColorSelect.value;
+        const theme = bgColorSelect.value;
         const fontSize = parseInt(fontSizeSlider.value);
 
-        // Set background color
-        let bgColorRGB, textColorRGB, lineNumColorRGB;
-        if (bgColor === 'white') {
-          bgColorRGB = [255, 255, 255]; // White background
-          textColorRGB = [0, 0, 0]; // Black text
-          lineNumColorRGB = [100, 100, 100]; // Gray for line numbers
+        // Set theme colors
+        let bgColor, textColor, lineNumColor;
+        if (theme === 'light') {
+          bgColor = [255, 255, 255];
+          textColor = [0, 0, 0];
+          lineNumColor = [128, 128, 128];
         } else {
-          bgColorRGB = [0, 0, 0]; // Black background
-          textColorRGB = [255, 255, 255]; // White text
-          lineNumColorRGB = [128, 128, 128]; // Gray for line numbers
+          bgColor = [30, 30, 46];
+          textColor = [255, 255, 255];
+          lineNumColor = [150, 150, 150];
         }
 
-        // Set up document styling
-        doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
+        // Set background
+        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
         doc.rect(0, 0, 210, 297, 'F');
 
-        // Header - centered heading
+        // Header
         doc.setFontSize(18);
-        doc.setTextColor(textColorRGB[0], textColorRGB[1], textColorRGB[2]);
+        doc.setTextColor(textColor[0], textColor[1], textColor[2]);
         const headingWidth = doc.getTextWidth(pdfHeading);
         const centerX = (210 - headingWidth) / 2;
         doc.text(pdfHeading, centerX, 25);
 
-        // Language name - centered under heading
+        // Language info
         doc.setFontSize(12);
         const languageName = `Language: ${language.toUpperCase()}`;
         const languageWidth = doc.getTextWidth(languageName);
         const languageCenterX = (210 - languageWidth) / 2;
         doc.text(languageName, languageCenterX, 35);
 
-        // Code content
-        doc.setFontSize(fontSize);
+        // Parse code into tokens
         const codeLines = codeInput.value.split('\n');
+        const tokens = parseCodeTokens(codeInput.value, language);
+        
+        doc.setFontSize(fontSize);
         let y = 50;
         const lineHeight = fontSize * 0.5;
         const leftMargin = 20;
-
-        codeLines.forEach((line, index) => {
+        let currentLineNum = 1;
+        
+        // Process each line with colorful syntax highlighting
+        codeLines.forEach((line, lineIndex) => {
           if (y > 275) {
             doc.addPage();
-            doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
+            doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
             doc.rect(0, 0, 210, 297, 'F');
             y = 25;
           }
 
-          // Line numbers
-          doc.setTextColor(lineNumColorRGB[0], lineNumColorRGB[1], lineNumColorRGB[2]);
-          doc.text(String(index + 1).padStart(3, ' ') + ':', leftMargin, y);
+          // Line number
+          doc.setTextColor(lineNumColor[0], lineNumColor[1], lineNumColor[2]);
+          doc.text(String(lineIndex + 1).padStart(3, ' ') + ':', leftMargin, y);
 
-          // Code line
-          doc.setTextColor(textColorRGB[0], textColorRGB[1], textColorRGB[2]);
+          // Parse line tokens
+          const lineTokens = parseCodeTokens(line, language);
+          let xPos = leftMargin + 20;
           const maxWidth = 150;
-          const wrappedLines = doc.splitTextToSize(line || ' ', maxWidth);
           
-          wrappedLines.forEach((wrappedLine, wrapIndex) => {
-            if (wrapIndex === 0) {
-              doc.text(wrappedLine, leftMargin + 20, y);
-            } else {
-              y += lineHeight;
-              if (y > 275) {
-                doc.addPage();
-                doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
-                doc.rect(0, 0, 210, 297, 'F');
-                y = 25;
+          lineTokens.forEach(token => {
+            const colorScheme = theme === 'light' ? 'light' : 'dark';
+            const tokenColor = SYNTAX_COLORS[token.type] ? 
+              SYNTAX_COLORS[token.type][colorScheme] : 
+              SYNTAX_COLORS.default[colorScheme];
+            
+            doc.setTextColor(tokenColor[0], tokenColor[1], tokenColor[2]);
+            
+            // Handle text wrapping
+            const textLines = doc.splitTextToSize(token.text, maxWidth - (xPos - leftMargin - 20));
+            textLines.forEach((textLine, textLineIndex) => {
+              if (textLineIndex > 0) {
+                y += lineHeight;
+                if (y > 275) {
+                  doc.addPage();
+                  doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+                  doc.rect(0, 0, 210, 297, 'F');
+                  y = 25;
+                }
+                xPos = leftMargin + 20;
               }
-              doc.text(wrappedLine, leftMargin + 20, y);
-            }
+              
+              doc.text(textLine, xPos, y);
+              xPos += doc.getTextWidth(textLine);
+            });
           });
 
           y += lineHeight;
         });
 
-        // Footer
+        // Footer with color legend
         const pageCount = doc.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
-          doc.setFontSize(9);
-          doc.setTextColor(lineNumColorRGB[0], lineNumColorRGB[1], lineNumColorRGB[2]);
-          doc.text('Generated with https://i-am-divyanshu.netlify.app/', 20, 287);
+          doc.setFontSize(8);
+          doc.setTextColor(lineNumColor[0], lineNumColor[1], lineNumColor[2]);
+          doc.text('Generated with CodeForge Pro - Colorful PDF Generator', 20, 287);
           doc.text(`Page ${i} of ${pageCount}`, 170, 287);
+          
+          // Color legend on first page
+          if (i === 1) {
+            doc.setFontSize(7);
+            doc.text('Colors: Keywords=Purple, Strings=Green, Functions=Orange, Numbers=Red, Variables=Blue, Comments=Gray', 20, 292);
+          }
         }
 
-        // --- NEW PDF DOWNLOAD HANDLING FOR APPSGEYSER ---
-        const pdfDataUri = doc.output('datauristring'); // Use data URI instead of blob
+        // Download PDF
+        const pdfDataUri = doc.output('datauristring');
         const downloadLink = document.createElement('a');
         
-        // First try the standard way
         try {
           downloadLink.href = pdfDataUri;
-          downloadLink.download = `${pdfHeading}.pdf`;
+          downloadLink.download = `${pdfHeading}_colorful.pdf`;
           document.body.appendChild(downloadLink);
           downloadLink.click();
         } catch (e) {
-          // Fallback for AppsGeyser WebView
           window.open(pdfDataUri, '_blank');
         } finally {
           setTimeout(() => {
@@ -855,7 +1077,6 @@
             }
           }, 1000);
         }
-        // --- END MODIFIED PDF LOGIC ---
 
         // Show success
         setTimeout(() => {
@@ -870,7 +1091,6 @@
 
       } catch (error) {
         console.error('Error generating PDF:', error);
-        // Custom error handling
         const errorToast = document.createElement('div');
         errorToast.style.position = 'fixed';
         errorToast.style.bottom = '20px';
