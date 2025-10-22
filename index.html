@@ -713,7 +713,7 @@
     function updatePreview() {
       const code = codeInput.value || '// Start typing your code here...';
       const language = langSelect.value;
-      preview.className = `hljs language-${language}`;
+      preview.className = `lng${language}`;
       preview.textContent = code;
       hljs.highlightElement(preview);
     }
