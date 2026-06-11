@@ -1,919 +1,1432 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeForge Pro - Premium Code to PDF Converter</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-      color: #ffffff;
-      min-height: 100vh;
-      overflow-x: hidden; /* Prevent horizontal scroll on body */
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Preloader styles */
-    #preloader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease-out;
-    }
-
-    .preloader-spinner {
-      width: 60px;
-      height: 60px;
-      border: 6px solid rgba(124, 58, 237, 0.3);
-      border-top: 6px solid #7c3aed;
-      border-radius: 50%;
-      animation: spin 1.2s linear infinite;
-    }
-
-    /* Animated background particles */
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .particle {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: rgba(124, 58, 237, 0.5);
-      border-radius: 50%;
-      animation: float 20s infinite linear;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(100vh) rotate(0deg);
-        opacity: 0;
-      }
-      10% {
-        opacity: 1;
-      }
-      90% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-100vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-
-    /* Header */
-    header {
-      position: relative;
-      z-index: 10;
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(124, 58, 237, 0.2);
-      padding: 1.5rem 0;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 1rem;
-      font-size: 2rem;
-      font-weight: 700;
-      color: #ffffff;
-      text-decoration: none;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    .tagline {
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 300;
-    }
-
-    /* Main content wrapper */
-    .main-content {
-      display: none;
-      flex-grow: 1;
-      flex-direction: column;
-    }
-
-    .container {
-      position: relative;
-      z-index: 10;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 3rem 2rem;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr; /* Always single column */
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 2rem;
-      transition: all 0.3s ease;
-      animation: slideUp 0.6s ease-out;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(124, 58, 237, 0.3);
-      border-color: rgba(124, 58, 237, 0.4);
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .card h3 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-    }
-
-    .icon {
-      width: 24px;
-      height: 24px;
-      fill: #7c3aed;
-    }
-
-    /* Form elements */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    textarea {
-      font-family: 'Fira Code', monospace;
-      min-height: 300px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-
-    /* Button */
-    .generate-btn {
-      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      justify-content: center;
-      width: 100%;
-      box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
-    }
-
-    .generate-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
-    }
-
-    .generate-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
-    }
-
-    .generate-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .generate-btn:hover::before {
-      left: 100%;
-    }
-
-    /* Preview */
-    .preview-card {
-      grid-column: auto;
-      animation-delay: 0.3s;
-    }
-
-    .preview-container {
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-    }
-
-    pre {
-      margin: 0;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.9rem;
-      line-height: 1.6;
-      max-height: 400px;
-      white-space: pre-wrap; /* Ensures text wraps */
-      word-wrap: break-word; /* Breaks long words */
-      max-width: 100%; /* Ensure pre element respects its container width */
-      overflow-x: auto; /* Add horizontal scrollbar if content is still too wide */
-    }
-
-    pre code {
-      background: none !important;
-      padding: 0 !important;
-      display: block; /* Ensure code block behaves as a block element */
-      width: 100%; /* Take full width of its parent */
-    }
-
-    /* Loading animation */
-    .loading {
-      display: none;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      color: rgba(255, 255, 255, 0.7);
-      margin-top: 1rem;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid #7c3aed;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Success message */
-    .success {
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      color: #10b981;
-      padding: 1rem;
-      border-radius: 12px;
-      margin-top: 1rem;
-      display: none;
-      animation: slideDown 0.3s ease-out;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Range input styling */
-    input[type="range"] {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-      outline: none;
-      padding: 0;
-      margin: 0.5rem 0;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #7c3aed;
-      border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
-      transition: background 0.3s ease;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      background: #7c3aed;
-      border-radius: 50%;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
-      transition: background 0.3s ease;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover,
-    input[type="range"]::-moz-range-thumb:hover {
-      background: #6a2edc;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 968px) {
-      .container {
-        padding: 2rem 1rem;
-      }
-      
-      .logo {
-        font-size: 1.5rem;
-      }
-      
-      .card {
-        padding: 1.5rem;
-      }
-      
-      textarea {
-        min-height: 250px;
-      }
-      
-      .form-group {
-        margin-bottom: 1rem;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .container {
-        padding: 1.5rem 0.75rem;
-      }
-      
-      .card {
-        padding: 1rem;
-      }
-      
-      .logo {
-        font-size: 1.25rem;
-        gap: 0.75rem;
-      }
-
-      .logo-icon {
-        width: 32px;
-        height: 32px;
-      }
-      
-      .tagline {
-        font-size: 0.8rem;
-      }
-
-      textarea {
-        min-height: 200px;
-        font-size: 0.85rem;
-      }
-      
-      .generate-btn {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-      }
-      
-      header {
-        padding: 1rem 0;
-      }
-
-      .card h3 {
-        font-size: 1.1rem;
-        gap: 0.4rem;
-      }
-
-      .icon {
-        width: 20px;
-        height: 20px;
-      }
-
-      .form-group label {
-        font-size: 0.9rem;
-      }
-
-      input, select, textarea {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-      }
-
-      pre {
-        font-size: 0.8rem;
-        line-height: 1.5;
-      }
-    }
-
-    @media (max-width: 375px) {
-      .container {
-        padding: 1rem 0.5rem;
-      }
-
-      .card {
-        padding: 0.8rem;
-      }
-
-      .logo {
-        font-size: 1.1rem;
-        gap: 0.5rem;
-      }
-
-      .logo-icon {
-        width: 28px;
-        height: 28px;
-      }
-
-      .tagline {
-        font-size: 0.75rem;
-      }
-
-      .card h3 {
-        font-size: 1rem;
-      }
-
-      .icon {
-        width: 18px;
-        height: 18px;
-      }
-
-      input, select, textarea {
-        padding: 0.7rem;
-        font-size: 0.85rem;
-      }
-
-      .generate-btn {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-      }
-
-      textarea {
-        min-height: 180px;
-      }
-    }
-
-    /* Highlight.js custom theme */
-    .hljs {
-      background: transparent !important;
-      color: #e2e8f0 !important;
-    }
-
-    .hljs-keyword { color: #7c3aed !important; }
-    .hljs-string { color: #10b981 !important; }
-    .hljs-comment { color: #6b7280 !important; }
-    .hljs-function { color: #f59e0b !important; }
-    .hljs-number { color: #ef4444 !important; }
-    .hljs-variable { color: #06b6d4 !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeForge Pro – Premium Code to PDF Converter</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hlThemeLink">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES & THEME SYSTEM
+═══════════════════════════════════════════════ */
+:root {
+  --bg0:#0f0f23; --bg1:#1a1a2e; --bg2:#16213e;
+  --card:rgba(255,255,255,0.05);
+  --inp:rgba(255,255,255,0.07);
+  --bdr:rgba(255,255,255,0.11);
+  --bdr-focus:#7c3aed;
+  --acc:#7c3aed; --acc2:#4f46e5;
+  --txt:#ffffff; --txt2:rgba(255,255,255,0.62); --txt3:rgba(255,255,255,0.3);
+  --ok:#10b981; --err:#ef4444; --warn:#f59e0b;
+  --r:14px; --rs:8px;
+  --mono:'Fira Code','JetBrains Mono',monospace;
+  --trans:0.22s ease;
+}
+body.th-hacker{ --bg0:#000; --bg1:#050505; --bg2:#020202; --card:rgba(0,255,65,.04); --bdr:rgba(0,255,65,.14); --bdr-focus:#00ff41; --acc:#00ff41; --acc2:#00bb30; }
+body.th-glass { --bg0:#130428; --bg1:#2a0a58; --bg2:#1d0640; --card:rgba(255,255,255,.09); --bdr:rgba(200,150,255,.2); --bdr-focus:#c084fc; --acc:#c084fc; --acc2:#a855f7; }
+body.th-neon  { --bg0:#0d001a; --bg1:#12002a; --bg2:#0a001a; --card:rgba(255,0,255,.04); --bdr:rgba(0,255,255,.17); --bdr-focus:#00ffff; --acc:#ff00ff; --acc2:#00ffff; }
+body.th-white { --bg0:#f8fafc; --bg1:#f1f5f9; --bg2:#e2e8f0; --card:rgba(0,0,0,.04); --inp:rgba(0,0,0,.06); --bdr:rgba(0,0,0,.1); --bdr-focus:#6366f1; --acc:#6366f1; --acc2:#4f46e5; --txt:#1e293b; --txt2:rgba(0,0,0,.55); --txt3:rgba(0,0,0,.3); }
+body.th-vscode{ --bg0:#1e1e1e; --bg1:#252526; --bg2:#1e1e1e; --card:rgba(255,255,255,.04); --bdr:rgba(255,255,255,.08); --bdr-focus:#007acc; --acc:#007acc; --acc2:#005f9e; }
+body.th-dracula{--bg0:#282a36; --bg1:#1e2029; --bg2:#21222c; --card:rgba(68,71,90,.4); --bdr:rgba(98,114,164,.3); --bdr-focus:#ff79c6; --acc:#ff79c6; --acc2:#bd93f9; }
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(145deg,var(--bg0) 0%,var(--bg1) 55%,var(--bg2) 100%);
+  color:var(--txt); min-height:100vh; overflow-x:hidden;
+  display:flex; flex-direction:column;
+  transition:background .4s,color .3s;
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(124,58,237,.35);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(124,58,237,.6)}
+
+/* ═══════════════════════════════════════════════
+   PRELOADER
+═══════════════════════════════════════════════ */
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(145deg,#0f0f23,#1a1a2e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;
+  transition:opacity .55s ease-out;
+}
+.pl-brand{font-size:2rem;font-weight:700;letter-spacing:-1px;color:#fff}
+.pl-brand b{color:#7c3aed}
+.pl-track{width:220px;height:3px;background:rgba(124,58,237,.18);border-radius:99px;overflow:hidden}
+.pl-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#4f46e5);border-radius:99px;animation:plFill 2.4s ease-in-out forwards}
+@keyframes plFill{0%{width:0}100%{width:100%}}
+.pl-sub{font-size:.72rem;color:rgba(255,255,255,.35);letter-spacing:2.5px;text-transform:uppercase}
+
+/* ═══════════════════════════════════════════════
+   PARTICLES
+═══════════════════════════════════════════════ */
+#particles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.pt{position:absolute;width:2px;height:2px;background:var(--acc);border-radius:50%;animation:ptRise linear infinite;opacity:0}
+@keyframes ptRise{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.55}90%{opacity:.55}100%{transform:translateY(-8vh) rotate(360deg);opacity:0}}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════ */
+#pbar{position:fixed;top:0;left:0;height:3px;width:0;z-index:10001;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:0 99px 99px 0;transition:width .3s ease}
+
+/* ═══════════════════════════════════════════════
+   TOASTS
+═══════════════════════════════════════════════ */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:10000;display:flex;flex-direction:column;gap:9px}
+.toast{
+  padding:11px 18px;border-radius:var(--rs);font-size:.84rem;font-weight:500;
+  display:flex;align-items:center;gap:9px;min-width:250px;
+  backdrop-filter:blur(20px);
+  animation:toastIn .28s ease-out;
+  box-shadow:0 4px 22px rgba(0,0,0,.32);
+  cursor:pointer;
+}
+.toast-ok  {background:rgba(16,185,129,.82);border:1px solid rgba(16,185,129,.4)}
+.toast-err {background:rgba(239,68,68,.82);border:1px solid rgba(239,68,68,.4)}
+.toast-inf {background:rgba(124,58,237,.82);border:1px solid rgba(124,58,237,.4)}
+.toast-wrn {background:rgba(245,158,11,.82);border:1px solid rgba(245,158,11,.4)}
+@keyframes toastIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══════════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════════ */
+#loadOverlay{
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(10px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;
+}
+#loadOverlay.on{display:flex}
+.spin-ring{width:54px;height:54px;border:4px solid rgba(124,58,237,.2);border-top-color:var(--acc);border-radius:50%;animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:.92rem;color:rgba(255,255,255,.8);font-weight:500}
+.load-pct{font-size:.78rem;color:rgba(255,255,255,.4);font-family:var(--mono)}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header{
+  position:relative;z-index:10;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(79,70,229,.06));
+  backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);
+  padding:1rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;
+}
+.logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.logo-ico{width:34px;height:34px;animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 5px var(--acc))}50%{filter:drop-shadow(0 0 18px var(--acc))}}
+.logo-name{font-size:1.3rem;font-weight:700;color:var(--txt)}
+.logo-name span{color:var(--acc)}
+.logo-pro{font-size:.55rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;padding:2px 6px;border-radius:99px;align-self:flex-start;margin-top:5px}
+.hdr-right{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}
+.theme-sel{background:var(--inp);border:1px solid var(--bdr);color:var(--txt);padding:.4rem .8rem;border-radius:var(--rs);font-size:.78rem;cursor:pointer;font-family:inherit;transition:border-color var(--trans)}
+.theme-sel:focus{outline:none;border-color:var(--acc)}
+.hdr-stats{display:flex;gap:1.2rem}
+.hs{text-align:center;cursor:default}
+.hs-v{font-size:.95rem;font-weight:700;color:var(--acc);font-family:var(--mono)}
+.hs-l{font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.main{display:none;flex-grow:1;flex-direction:column}
+.wrap{position:relative;z-index:10;max-width:1340px;margin:0 auto;padding:1.75rem 1.5rem;width:100%}
+.grid2{display:grid;grid-template-columns:330px 1fr;gap:1.4rem;align-items:start}
+.sidebar{display:flex;flex-direction:column;gap:1.2rem}
+.mpanel{display:flex;flex-direction:column;gap:1.2rem}
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card{
+  background:var(--card);backdrop-filter:blur(20px);
+  border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem;
+  transition:border-color var(--trans),box-shadow var(--trans);
+  animation:slideUp .5s ease-out both;
+}
+.card:hover{border-color:rgba(124,58,237,.3);box-shadow:0 10px 38px rgba(124,58,237,.14)}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.15rem;gap:.5rem}
+.ct{display:flex;align-items:center;gap:.55rem;font-size:.95rem;font-weight:600;color:var(--txt)}
+.ci{width:17px;height:17px;color:var(--acc);flex-shrink:0}
+.cb-body{overflow:hidden;transition:max-height .38s ease,opacity .28s ease}
+.cb-body.cls{max-height:0!important;opacity:0}
+.colbtn{background:none;border:none;color:var(--txt2);cursor:pointer;padding:3px;border-radius:6px;display:flex;align-items:center;transition:color var(--trans)}
+.colbtn:hover{color:var(--txt)}
+.colbtn svg{transition:transform .28s ease}
+.colbtn.cls svg{transform:rotate(-90deg)}
+
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════ */
+.fg{margin-bottom:1rem}
+.fg:last-child{margin-bottom:0}
+label,.lbl{display:block;margin-bottom:.42rem;font-size:.76rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.55px}
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:.65rem .85rem;
+  background:var(--inp);border:1px solid var(--bdr);
+  border-radius:var(--rs);color:var(--txt);
+  font-family:inherit;font-size:.875rem;
+  transition:border-color var(--trans),box-shadow var(--trans),background var(--trans);
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--bdr-focus);box-shadow:0 0 0 3px rgba(124,58,237,.16);background:rgba(255,255,255,.1)}
+select option{background:#1a1a2e;color:#fff}
+body.th-white select option{background:#f1f5f9;color:#1e293b}
+/* Range */
+.rrow{display:flex;align-items:center;gap:.7rem}
+.rval{min-width:36px;text-align:right;font-size:.78rem;font-weight:700;color:var(--acc);font-family:var(--mono)}
+input[type=range]{
+  flex:1;height:5px;background:var(--bdr);border-radius:99px;
+  outline:none;padding:0;margin:0;border:none;box-shadow:none;
+  -webkit-appearance:none;appearance:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;background:var(--acc);border-radius:50%;cursor:pointer;box-shadow:0 0 7px rgba(124,58,237,.5);transition:transform .14s ease}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;background:var(--acc);border-radius:50%;cursor:pointer;border:none}
+/* Color */
+input[type=color]{width:34px;height:34px;padding:2px;border-radius:7px;border:1px solid var(--bdr);cursor:pointer;background:none}
+.clrrow{display:flex;align-items:center;gap:.55rem}
+.clrrow input[type=text]{flex:1;font-family:var(--mono);font-size:.78rem}
+/* Toggle */
+.trow{display:flex;align-items:center;justify-content:space-between;padding:.1rem 0}
+.tlbl{font-size:.875rem;color:var(--txt);font-weight:500}
+.tog{position:relative;display:inline-block;width:42px;height:22px}
+.tog input{opacity:0;width:0;height:0}
+.tsl{position:absolute;inset:0;background:rgba(255,255,255,.14);border-radius:99px;cursor:pointer;transition:background .22s}
+.tsl::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .22s;box-shadow:0 1px 5px rgba(0,0,0,.3)}
+.tog input:checked+.tsl{background:var(--acc)}
+.tog input:checked+.tsl::before{transform:translateX(20px)}
+/* Btn group */
+.bgrp{display:flex;gap:.45rem;flex-wrap:wrap}
+.btog{padding:.38rem .85rem;font-size:.78rem;font-weight:600;background:var(--inp);border:1px solid var(--bdr);color:var(--txt2);border-radius:var(--rs);cursor:pointer;transition:all .18s ease;font-family:inherit}
+.btog.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.btog:hover:not(.on){border-color:var(--acc);color:var(--txt)}
+/* Position grid */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.38rem}
+.pbtn{padding:.42rem .3rem;font-size:.67rem;font-weight:500;background:var(--inp);border:1px solid var(--bdr);color:var(--txt2);border-radius:var(--rs);cursor:pointer;text-align:center;transition:all .18s ease;font-family:inherit}
+.pbtn.on{background:rgba(124,58,237,.22);border-color:var(--acc);color:var(--txt)}
+.pbtn:hover:not(.on){border-color:var(--acc);color:var(--txt)}
+/* Divider */
+.div{height:1px;background:var(--bdr);margin:.7rem 0}
+
+/* ═══════════════════════════════════════════════
+   DROPZONE
+═══════════════════════════════════════════════ */
+.dz{border:2px dashed var(--bdr);border-radius:var(--rs);padding:1.3rem;text-align:center;cursor:pointer;transition:all .22s ease;position:relative}
+.dz:hover,.dz.drag{border-color:var(--acc);background:rgba(124,58,237,.07)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-ico{width:28px;height:28px;color:var(--acc);margin:0 auto .45rem}
+.dz-txt{font-size:.78rem;color:var(--txt2)}
+.dz-txt span{color:var(--acc);font-weight:600}
+
+/* ═══════════════════════════════════════════════
+   IMAGE PREVIEW BOX
+═══════════════════════════════════════════════ */
+.imgprev{width:100%;height:72px;border:1px solid var(--bdr);border-radius:var(--rs);overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);margin-top:.5rem}
+.imgprev img{max-width:100%;max-height:100%;object-fit:contain}
+.imgprev span{font-size:.72rem;color:var(--txt3)}
+
+/* ═══════════════════════════════════════════════
+   EDITOR
+═══════════════════════════════════════════════ */
+.etbar{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);border:1px solid var(--bdr);border-bottom:none;border-radius:var(--rs) var(--rs) 0 0;padding:.48rem .7rem;flex-wrap:wrap;gap:.4rem}
+.etl,.etr{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.tbtn{background:none;border:1px solid transparent;color:var(--txt2);padding:4px 9px;border-radius:6px;font-size:.75rem;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .18s ease;font-family:inherit}
+.tbtn:hover{border-color:var(--bdr);color:var(--txt);background:rgba(255,255,255,.06)}
+.tbtn svg{width:12px;height:12px}
+.lbadge{font-size:.72rem;color:var(--acc);font-family:var(--mono);font-weight:700;padding:2px 7px;background:rgba(124,58,237,.15);border-radius:5px}
+textarea#code{
+  font-family:var(--mono);min-height:360px;resize:vertical;
+  line-height:1.68;font-size:.875rem;letter-spacing:.2px;
+  border:1px solid var(--bdr);border-radius:0;
+  padding:.95rem 1rem;tab-size:2;
+  width:100%;display:block;
+}
+textarea#code.fs{position:fixed;inset:0;z-index:5000;border-radius:0;min-height:100vh;height:100vh;resize:none;font-size:.95rem}
+.sbar{display:flex;gap:1.1rem;padding:.38rem .72rem;background:rgba(0,0,0,.15);border:1px solid var(--bdr);border-top:none;border-radius:0 0 var(--rs) var(--rs);flex-wrap:wrap}
+.sbar span{font-size:.7rem;color:var(--txt3);font-family:var(--mono)}
+.sbar span b{color:var(--acc)}
+
+/* ═══════════════════════════════════════════════
+   PREVIEW
+═══════════════════════════════════════════════ */
+.prev-wrap{background:rgba(0,0,0,.32);border:1px solid var(--bdr);border-radius:var(--rs);overflow:hidden;position:relative}
+.prev-canvas{padding:1.15rem;overflow-y:auto;max-height:500px;position:relative;transform-origin:top left}
+.prev-canvas pre{font-family:var(--mono);font-size:.84rem;line-height:1.66;white-space:pre-wrap;word-break:break-all;margin:0}
+.prev-canvas pre code{background:none!important;padding:0!important;display:block}
+.wm-overlay{position:absolute;inset:0;pointer-events:none;display:none;overflow:hidden}
+
+/* ═══════════════════════════════════════════════
+   EXPORT BUTTONS
+═══════════════════════════════════════════════ */
+.expgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem}
+.expbtn{
+  padding:.65rem .5rem;border-radius:var(--rs);border:1px solid var(--bdr);
+  background:var(--inp);color:var(--txt);font-size:.78rem;font-weight:600;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.28rem;
+  transition:all .2s ease;font-family:inherit;
+}
+.expbtn:hover{border-color:var(--acc);background:rgba(124,58,237,.14);transform:translateY(-2px)}
+.expbtn svg{width:17px;height:17px}
+.expbtn.main{
+  grid-column:1/-1;background:linear-gradient(135deg,var(--acc),var(--acc2));
+  border:none;color:#fff;padding:.88rem;font-size:.92rem;
+  box-shadow:0 4px 18px rgba(124,58,237,.36);position:relative;overflow:hidden;
+}
+.expbtn.main::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transition:left .5s}
+.expbtn.main:hover::before{left:100%}
+.expbtn.main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.46)}
+.expbtn.main:active{transform:none}
+.expbtn.main svg{width:20px;height:20px}
+
+/* ═══════════════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════════════ */
+.hlist{display:flex;flex-direction:column;gap:.5rem;max-height:190px;overflow-y:auto}
+.hi{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .7rem;background:var(--inp);border:1px solid var(--bdr);border-radius:var(--rs);font-size:.78rem}
+.hi-name{font-weight:500;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.hi-dt{color:var(--txt3);font-size:.68rem;white-space:nowrap}
+.hempty{text-align:center;padding:1.4rem;color:var(--txt3);font-size:.78rem}
+
+/* ═══════════════════════════════════════════════
+   QR PANEL
+═══════════════════════════════════════════════ */
+#qrBox{display:none;margin-top:.75rem;text-align:center}
+#qrBox canvas,#qrBox img{border-radius:8px!important;margin:0 auto}
+
+/* ═══════════════════════════════════════════════
+   KEYBOARD HINTS
+═══════════════════════════════════════════════ */
+.kbd{display:inline-flex;align-items:center;gap:2px;font-size:.68rem;color:var(--txt3)}
+.kbd kbd{background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:4px;padding:1px 5px;font-family:var(--mono)}
+
+/* ═══════════════════════════════════════════════
+   SECTION HIDDEN UTILITY
+═══════════════════════════════════════════════ */
+.sh{display:none!important}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media(max-width:1060px){.grid2{grid-template-columns:1fr}.sidebar{order:1}.mpanel{order:0}}
+@media(max-width:640px){
+  .wrap{padding:.9rem}
+  header{padding:.85rem 1rem}
+  .hdr-stats{display:none}
+  .expgrid{grid-template-columns:1fr}
+  .expbtn.main{grid-column:auto}
+  textarea#code{min-height:220px;font-size:.82rem}
+  .logo-name{font-size:1.1rem}
+  .pgrid{grid-template-columns:repeat(2,1fr)}
+}
+@media print{
+  #preloader,#particles,#toasts,#pbar,#loadOverlay,header,.etbar,.sbar,.dz,.expgrid,.hlist,.colbtn{display:none!important}
+  .card{break-inside:avoid}
+  .prev-canvas{max-height:none}
+}
+</style>
 </head>
 <body>
-  <!-- Preloader -->
-  <div id="preloader">
-    <div class="preloader-spinner"></div>
+
+<div id="pbar"></div>
+<div id="toasts"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadOverlay">
+  <div class="spin-ring"></div>
+  <div class="load-txt" id="loadTxt">Generating PDF…</div>
+  <div class="load-pct" id="loadPct">0%</div>
+</div>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <div class="pl-brand">Code<b>Forge</b> Pro</div>
+  <div class="pl-track"><div class="pl-fill"></div></div>
+  <div class="pl-sub">Loading workspace…</div>
+</div>
+
+<div id="particles"></div>
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<div class="main" id="mainEl">
+
+<header>
+  <a href="#" class="logo">
+    <svg class="logo-ico" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="12" fill="url(#lg)"/>
+      <path d="M12 15L20 10L28 15L20 20Z" fill="white" opacity=".9"/>
+      <path d="M12 20L20 15L28 20L20 25Z" fill="white" opacity=".7"/>
+      <path d="M12 25L20 20L28 25L20 30Z" fill="white" opacity=".5"/>
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs>
+    </svg>
+    <div><div class="logo-name">Code<span>Forge</span></div></div>
+    <div class="logo-pro">PRO</div>
+  </a>
+  <div class="hdr-right">
+    <select class="theme-sel" id="themeSel">
+      <option value="">🎨 Default Dark</option>
+      <option value="th-hacker">💚 Dark Hacker</option>
+      <option value="th-glass">🔮 Glassmorphism</option>
+      <option value="th-neon">🌈 Neon Cyberpunk</option>
+      <option value="th-white">☀️ Minimal White</option>
+      <option value="th-vscode">🔵 VS Code</option>
+      <option value="th-dracula">🧛 Dracula</option>
+    </select>
+    <div class="hdr-stats">
+      <div class="hs"><div class="hs-v" id="sLines">0</div><div class="hs-l">Lines</div></div>
+      <div class="hs"><div class="hs-v" id="sWords">0</div><div class="hs-l">Words</div></div>
+      <div class="hs"><div class="hs-v" id="sChars">0</div><div class="hs-l">Chars</div></div>
+      <div class="hs"><div class="hs-v" id="sPages">~1</div><div class="hs-l">Est.Pages</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="grid2">
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<div class="sidebar">
+
+  <!-- Document Settings -->
+  <div class="card" style="animation-delay:.04s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Document Settings
+      </div>
+      <button class="colbtn" onclick="colCard(this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+    </div>
+    <div class="cb-body">
+      <div class="fg"><label>PDF Heading</label><input id="pdfHead" type="text" placeholder="My Code Document" value="Code Document"/></div>
+      <div class="fg">
+        <label>Language</label>
+        <select id="lang">
+          <option value="plaintext">Plain Text</option>
+          <option value="javascript" selected>JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="csharp">C#</option>
+          <option value="php">PHP</option>
+          <option value="ruby">Ruby</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+          <option value="swift">Swift</option>
+          <option value="kotlin">Kotlin</option>
+          <option value="sql">SQL</option>
+          <option value="bash">Bash / Shell</option>
+          <option value="json">JSON</option>
+          <option value="xml">XML</option>
+          <option value="markdown">Markdown</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Page Size</label>
+        <select id="pageSize"><option value="a4">A4 (210×297 mm)</option><option value="letter">Letter (215.9×279.4 mm)</option><option value="legal">Legal (215.9×355.6 mm)</option></select>
+      </div>
+      <div class="fg">
+        <label>Orientation</label>
+        <select id="orient"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+      </div>
+      <div class="fg">
+        <label>PDF Background Theme</label>
+        <select id="bgTheme">
+          <option value="dark">Dark (Black)</option>
+          <option value="white">Light (White)</option>
+          <option value="solarized">Solarized Dark</option>
+          <option value="monokai">Monokai</option>
+          <option value="dracula">Dracula Dark</option>
+          <option value="nord">Nord Blue</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Font Size — <span id="fsDisp">10</span>px</label>
+        <div class="rrow"><input type="range" id="fontSize" min="7" max="16" value="10" oninput="syncR('fontSize','fsDisp',this.value+'px'); syncR('fontSize','fsVal',this.value); updatePreview()"><span class="rval" id="fsVal">10</span></div>
+      </div>
+      <div class="fg">
+        <label>Margins — <span id="mgDisp">15</span>mm</label>
+        <div class="rrow"><input type="range" id="margin" min="5" max="35" value="15" oninput="syncR('margin','mgDisp',this.value+'mm'); syncR('margin','mgVal',this.value)"><span class="rval" id="mgVal">15</span></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Animated particles -->
-  <div class="particles" id="particles"></div>
+  <!-- Header & Footer -->
+  <div class="card" style="animation-delay:.08s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="3" y1="12" x2="15" y2="12"/></svg>
+        Header &amp; Footer
+      </div>
+      <button class="colbtn" onclick="colCard(this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+    </div>
+    <div class="cb-body">
+      <div class="fg"><label>Custom Header Text</label><input id="hdrTxt" type="text" placeholder="Leave blank for document title"/></div>
+      <div class="fg"><label>Custom Footer Text</label><input id="ftrTxt" type="text" placeholder="Generated by CodeForge Pro"/></div>
+      <div class="fg">
+        <label>Page Numbers</label>
+        <select id="pgNumStyle"><option value="none">None</option><option value="right" selected>Page X of Y (Right)</option><option value="center">Page X of Y (Center)</option></select>
+      </div>
+      <div class="fg"><div class="trow"><span class="tlbl">Show language tag in header</span><label class="tog"><input type="checkbox" id="showLang" checked><span class="tsl"></span></label></div></div>
+      <div class="fg"><div class="trow"><span class="tlbl">Show line numbers</span><label class="tog"><input type="checkbox" id="showLineNums" checked><span class="tsl"></span></label></div></div>
+    </div>
+  </div>
 
-  <div class="main-content">
-    <header>
-      <a href="#" class="logo">
-        <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="12" fill="url(#gradient)"/>
-          <path d="M12 15L20 10L28 15L20 20L12 15Z" fill="white" opacity="0.9"/>
-          <path d="M12 20L20 15L28 20L20 25L12 20Z" fill="white" opacity="0.7"/>
-          <path d="M12 25L20 20L28 25L20 30L12 25Z" fill="white" opacity="0.5"/>
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-        </svg>
-        CodeForge
-      </a>
-      <div class="tagline">Transform your code into beautiful PDFs</div>
-    </header>
-
-    <div class="container">
-      <div class="grid">
-        <div class="card">
-          <h3>
-            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-              <polyline points="14,2 14,8 20,8"/>
-            </svg>
-            Document Settings
-          </h3>
-          
-          <div class="form-group">
-            <label for="pdfHeading">PDF Heading</label>
-            <input id="pdfHeading" type="text" placeholder="Enter PDF heading..." />
-          </div>
-
-          <div class="form-group">
-            <label for="lang">Language</label>
-            <select id="lang">
-              <option value="">None</option>
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="html">HTML</option>
-              <option value="css">CSS</option>
-              <option value="java">Java</option>
-              <option value="cpp">C++</option>
-              <option value="csharp">C#</option>
-              <option value="php">PHP</option>
-              <option value="ruby">Ruby</option>
-              <option value="go">Go</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="bgColor">Background Color</label>
-            <select id="bgColor">
-              <option value="black">Black</option>
-              <option value="white">White</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="fontSize">Font Size</label>
-            <input id="fontSize" type="range" min="8" max="16" value="10" />
-            <span id="fontSizeValue">10px</span>
-          </div>
-
-          <button class="generate-btn" id="generateBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-              <polyline points="14,2 14,8 20,8"/>
-              <path d="M16 13H8"/>
-              <path d="M16 17H8"/>
-              <path d="M10 9H8"/>
-            </svg>
-            Generate PDF
-          </button>
-
-          <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <span>Generating PDF...</span>
-          </div>
-
-          <div class="success" id="success">
-            <strong>Success!</strong> Your PDF has been generated and downloaded.
+  <!-- Watermark Settings -->
+  <div class="card" style="animation-delay:.12s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+        Watermark Settings
+      </div>
+      <button class="colbtn" onclick="colCard(this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+    </div>
+    <div class="cb-body">
+      <div class="fg"><div class="trow"><span class="tlbl" style="font-size:.95rem;font-weight:600;">Enable Watermark</span><label class="tog"><input type="checkbox" id="wmOn" onchange="wmToggle()"><span class="tsl"></span></label></div></div>
+      <div id="wmBody" style="opacity:.4;pointer-events:none">
+        <div class="fg">
+          <label>Watermark Type</label>
+          <div class="bgrp">
+            <button class="btog on" id="wmTText" onclick="wmType('text')">✏ Text</button>
+            <button class="btog" id="wmTImg" onclick="wmType('image')">🖼 Image</button>
+            <button class="btog" id="wmTQR" onclick="wmType('qr')">⬛ QR Code</button>
           </div>
         </div>
 
-        <div class="card">
-          <h3>
-            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <polyline points="16 18 22 12 16 6"/>
-              <polyline points="8 6 2 12 8 18"/>
-            </svg>
-            Code Editor
-          </h3>
-          
-          <div class="form-group">
-            <label for="codeInput">Your Code</label>
-            <textarea id="codeInput" placeholder="Write your code here..."></textarea>
+        <!-- TEXT watermark -->
+        <div id="wmTextOpts">
+          <div class="fg"><label>Watermark Text</label><input id="wmTxt" type="text" placeholder="CONFIDENTIAL" value="CONFIDENTIAL" oninput="updateWmPrev()"/></div>
+          <div class="fg">
+            <label>Font Family</label>
+            <select id="wmFont" onchange="updateWmPrev()">
+              <option value="Arial">Arial</option><option value="Helvetica">Helvetica</option>
+              <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option><option value="Impact">Impact</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Color</label>
+            <div class="clrrow">
+              <input type="color" id="wmClr" value="#ff0000" oninput="syncColorText('wmClr','wmClrTxt');updateWmPrev()"/>
+              <input type="text" id="wmClrTxt" value="#ff0000" maxlength="7" oninput="syncColorPicker('wmClrTxt','wmClr');updateWmPrev()" style="font-family:var(--mono);font-size:.78rem"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label>Size — <span id="wmSzD">48</span>pt</label>
+            <div class="rrow"><input type="range" id="wmSz" min="10" max="140" value="48" oninput="syncR('wmSz','wmSzD',this.value+'pt');syncR('wmSz','wmSzV',this.value);updateWmPrev()"><span class="rval" id="wmSzV">48</span></div>
+          </div>
+          <div class="fg"><div class="trow"><span class="tlbl">Bold</span><label class="tog"><input type="checkbox" id="wmBold" onchange="updateWmPrev()"><span class="tsl"></span></label></div></div>
+          <div class="fg"><div class="trow"><span class="tlbl">Italic</span><label class="tog"><input type="checkbox" id="wmItalic" onchange="updateWmPrev()"><span class="tsl"></span></label></div></div>
+        </div>
+
+        <!-- IMAGE watermark -->
+        <div id="wmImgOpts" class="sh">
+          <div class="fg">
+            <label>Upload Watermark Image</label>
+            <div class="dz" id="wmDZ">
+              <input type="file" id="wmImgIn" accept="image/*" onchange="wmImgUpload(this)"/>
+              <svg class="dz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="dz-txt">Drop image or <span>browse</span><br><small>PNG · JPG · GIF · WEBP</small></div>
+            </div>
+            <div class="imgprev" id="wmImgPrev"><span>No image selected</span></div>
+          </div>
+          <div class="fg">
+            <label>Image Size — <span id="wmISzD">40</span>%</label>
+            <div class="rrow"><input type="range" id="wmISz" min="5" max="100" value="40" oninput="syncR('wmISz','wmISzD',this.value+'%');syncR('wmISz','wmISzV',this.value);updateWmPrev()"><span class="rval" id="wmISzV">40</span></div>
           </div>
         </div>
 
-        <div class="card preview-card">
-          <h3>
-            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-            Live Preview
-          </h3>
-          
-          <div class="preview-container">
-            <pre><code id="preview" class="hljs"></code></pre>
+        <!-- QR Code watermark -->
+        <div id="wmQROpts" class="sh">
+          <div class="fg"><label>QR Code Data / URL</label><input id="wmQRData" type="text" placeholder="https://example.com or any text" value="https://example.com" oninput="updateWmPrev()"/></div>
+          <div class="fg">
+            <label>QR Size — <span id="wmQRSzD">30</span>%</label>
+            <div class="rrow"><input type="range" id="wmQRSz" min="5" max="70" value="30" oninput="syncR('wmQRSz','wmQRSzD',this.value+'%');syncR('wmQRSz','wmQRSzV',this.value);updateWmPrev()"><span class="rval" id="wmQRSzV">30</span></div>
           </div>
+          <div id="qrBox"><div id="qrRender"></div></div>
+        </div>
+
+        <!-- Shared controls -->
+        <div class="div"></div>
+        <div class="fg">
+          <label>Opacity — <span id="wmOpD">30</span>%</label>
+          <div class="rrow"><input type="range" id="wmOp" min="5" max="90" value="30" oninput="syncR('wmOp','wmOpD',this.value+'%');syncR('wmOp','wmOpV',this.value);updateWmPrev()"><span class="rval" id="wmOpV">30</span></div>
+        </div>
+        <div class="fg">
+          <label>Rotation — <span id="wmRotD">-45</span>°</label>
+          <div class="rrow"><input type="range" id="wmRot" min="-180" max="180" value="-45" oninput="syncR('wmRot','wmRotD',this.value+'°');syncR('wmRot','wmRotV',this.value);updateWmPrev()"><span class="rval" id="wmRotV">-45</span></div>
+        </div>
+        <div class="fg">
+          <label>Position</label>
+          <div class="pgrid">
+            <button class="pbtn" onclick="wmPos('top-left',this)">↖ Top Left</button>
+            <button class="pbtn on" onclick="wmPos('center',this)">⊙ Center</button>
+            <button class="pbtn" onclick="wmPos('top-right',this)">↗ Top Right</button>
+            <button class="pbtn" onclick="wmPos('bot-left',this)">↙ Bot Left</button>
+            <button class="pbtn" onclick="wmPos('diagonal',this)">⟋ Diagonal</button>
+            <button class="pbtn" onclick="wmPos('bot-right',this)">↘ Bot Right</button>
+          </div>
+        </div>
+      </div><!-- /wmBody -->
+    </div>
+  </div>
+
+  <!-- Download History -->
+  <div class="card" style="animation-delay:.16s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        Download History
+      </div>
+      <button class="tbtn" onclick="clearHist()" style="font-size:.7rem">Clear</button>
+    </div>
+    <div class="hlist" id="histList"><div class="hempty">No downloads yet</div></div>
+  </div>
+
+</div><!-- /sidebar -->
+
+<!-- ════════════ MAIN PANEL ════════════ -->
+<div class="mpanel">
+
+  <!-- Code Editor -->
+  <div class="card" style="animation-delay:.06s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Code Editor
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span class="lbadge" id="lbadge">JS</span>
+        <span class="kbd"><kbd>Ctrl</kbd>+<kbd>↵</kbd> generate</span>
+      </div>
+    </div>
+
+    <div class="etbar">
+      <div class="etl">
+        <button class="tbtn" onclick="fmtCode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>Format</button>
+        <button class="tbtn" onclick="copyCode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button>
+        <button class="tbtn" onclick="clearEd()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Clear</button>
+        <button class="tbtn" onclick="aiFormat()" title="AI-assisted code formatting (uses Claude API)">✨ AI Format</button>
+      </div>
+      <div class="etr">
+        <button class="tbtn" onclick="document.execCommand('undo')" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15A9 9 0 1020.49 15"/></svg></button>
+        <button class="tbtn" onclick="document.execCommand('redo')" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15A9 9 0 113.51 15"/></svg></button>
+        <button class="tbtn" onclick="toggleFS()" title="Fullscreen editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>
+      </div>
+    </div>
+
+    <textarea id="code" spellcheck="false" placeholder="// Paste or type your code here…
+// Drop a file onto this area or use the import button below
+// Shortcuts: Ctrl+Enter = Generate PDF  |  Tab = Indent
+
+function helloWorld() {
+  console.log('Hello, CodeForge Pro! 🚀');
+}"></textarea>
+
+    <div class="sbar">
+      <span>Lines: <b id="sbL">0</b></span>
+      <span>Words: <b id="sbW">0</b></span>
+      <span>Chars: <b id="sbC">0</b></span>
+      <span>Est. Pages: <b id="sbP">~1</b></span>
+    </div>
+
+    <!-- File import -->
+    <div style="margin-top:.7rem">
+      <div class="dz" id="fileDZ" style="padding:.8rem">
+        <input type="file" id="fileIn" accept=".js,.ts,.py,.java,.cpp,.c,.cs,.html,.htm,.css,.php,.rb,.go,.rs,.swift,.kt,.sql,.sh,.bash,.json,.xml,.md,.txt" onchange="fileImport(this)"/>
+        <div style="display:flex;align-items:center;gap:.5rem;justify-content:center">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span style="font-size:.77rem;color:var(--txt2)">Import code file — <span style="color:var(--acc);font-weight:600">drag &amp; drop</span> or click to browse</span>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // Create animated particles
-    function createParticles() {
-      const particles = document.getElementById('particles');
-      for (let i = 0; i < 50; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 20 + 's';
-        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-        particles.appendChild(particle);
-      }
-    }
+  <!-- Live Preview -->
+  <div class="card" style="animation-delay:.1s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Live Preview
+      </div>
+      <div style="display:flex;align-items:center;gap:.45rem">
+        <button class="tbtn" onclick="zoom(-10)">−</button>
+        <span id="zoomLbl" style="font-size:.72rem;color:var(--txt2);min-width:34px;text-align:center">100%</span>
+        <button class="tbtn" onclick="zoom(10)">+</button>
+        <button class="tbtn" onclick="window.print()" title="Print preview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+      </div>
+    </div>
+    <div class="prev-wrap">
+      <div class="prev-canvas" id="prevCanvas">
+        <div class="wm-overlay" id="wmOverlay"></div>
+        <pre><code id="prev" class="hljs"></code></pre>
+      </div>
+    </div>
+  </div>
 
-    // Main functionality
-    const codeInput = document.getElementById('codeInput');
-    const preview = document.getElementById('preview');
-    const langSelect = document.getElementById('lang');
-    const generateBtn = document.getElementById('generateBtn');
-    const loading = document.getElementById('loading');
-    const success = document.getElementById('success');
-    const bgColorSelect = document.getElementById('bgColor');
-    const fontSizeSlider = document.getElementById('fontSize');
-    const fontSizeValue = document.getElementById('fontSizeValue');
-    const preloader = document.getElementById('preloader');
-    const mainContent = document.querySelector('.main-content');
+  <!-- Export -->
+  <div class="card" style="animation-delay:.14s">
+    <div class="ch">
+      <div class="ct">
+        <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export &amp; Download
+      </div>
+      <span class="kbd"><kbd>Ctrl</kbd>+<kbd>↵</kbd></span>
+    </div>
+    <div class="expgrid">
+      <button class="expbtn main" id="genBtn" onclick="genPDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Generate &amp; Download PDF
+      </button>
+      <button class="expbtn" onclick="expTXT()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
+        .TXT
+      </button>
+      <button class="expbtn" onclick="expHTML()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        .HTML
+      </button>
+      <button class="expbtn" onclick="expPNG()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        .PNG
+      </button>
+    </div>
+    <div style="margin-top:.65rem;font-size:.7rem;color:var(--txt3);text-align:center">
+      Watermark applied to every page · Auto-saved · All processing is local &amp; private
+    </div>
+  </div>
 
-    // Update font size display
-    fontSizeSlider.addEventListener('input', function() {
-      fontSizeValue.textContent = this.value + 'px';
-    });
+</div><!-- /mpanel -->
+</div><!-- /grid2 -->
+</div><!-- /wrap -->
 
-    // Update preview with syntax highlighting
-    function updatePreview() {
-      const code = codeInput.value || '// Start typing your code here...';
-      const language = langSelect.value;
-      preview.className = `lng${language}`;
-      preview.textContent = code;
-      hljs.highlightElement(preview);
-    }
+<footer style="position:relative;z-index:10;text-align:center;padding:1.4rem;font-size:.7rem;color:var(--txt3);border-top:1px solid var(--bdr)">
+  CodeForge Pro &mdash; Premium Code to PDF Converter &mdash; All processing is 100% local in your browser
+</footer>
+</div><!-- /main -->
 
-    // Event listeners
-    codeInput.addEventListener('input', updatePreview);
-    langSelect.addEventListener('change', updatePreview);
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+'use strict';
 
-    // Generate PDF
-    generateBtn.addEventListener('click', async () => {
-      if (!codeInput.value.trim()) {
-        // More gentle error notification
-        codeInput.style.borderColor = '#ef4444';
-        codeInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
-        setTimeout(() => {
-          codeInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-          codeInput.style.boxShadow = 'none';
-        }, 2000);
-        return;
-      }
+/* ─────────────────── STATE ─────────────────── */
+const S = {
+  wmType: 'text',
+  wmPosition: 'center',
+  wmImg: null,      // data URL
+  wmQRDataURL: null,// data URL of QR image
+  zoom: 100,
+  history: [],
+  theme: '',
+};
 
-      // Verify PDF library is loaded
-      if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-        alert('PDF library failed to load. Please check your internet connection.');
-        return;
-      }
+/* ─────────────────── UTILS ─────────────────── */
+const $ = id => document.getElementById(id);
+const val = id => $(id) ? $(id).value : '';
+const chk = id => $(id) ? $(id).checked : false;
+const intVal = id => parseInt(val(id)) || 0;
 
-      // Show loading
-      generateBtn.style.display = 'none';
-      loading.style.display = 'flex';
-      success.style.display = 'none';
+function syncR(sliderId, dispId, text) {
+  const d = $(dispId);
+  if (d) d.textContent = text || $(sliderId).value;
+}
 
-      try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-        const pdfHeading = document.getElementById('pdfHeading').value || 'Code Document';
-        const language = langSelect.value;
-        const bgColor = bgColorSelect.value;
-        const fontSize = parseInt(fontSizeSlider.value);
+function syncColorText(pickId, txtId) {
+  const t = $(txtId); if (t) t.value = $(pickId).value;
+}
+function syncColorPicker(txtId, pickId) {
+  const v = val(txtId);
+  if (/^#[0-9a-fA-F]{6}$/.test(v) && $(pickId)) $(pickId).value = v;
+}
 
-        // Set background color
-        let bgColorRGB, textColorRGB, lineNumColorRGB;
-        if (bgColor === 'white') {
-          bgColorRGB = [255, 255, 255]; // White background
-          textColorRGB = [0, 0, 0]; // Black text
-          lineNumColorRGB = [100, 100, 100]; // Gray for line numbers
-        } else {
-          bgColorRGB = [0, 0, 0]; // Black background
-          textColorRGB = [255, 255, 255]; // White text
-          lineNumColorRGB = [128, 128, 128]; // Gray for line numbers
-        }
+function toast(msg, type='inf', dur=3200) {
+  const c = $('toasts');
+  const t = document.createElement('div');
+  const icons={ok:'✓',err:'✕',inf:'ℹ',wrn:'⚠'};
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<span>${icons[type]||'ℹ'}</span><span>${msg}</span>`;
+  t.onclick = () => c.contains(t) && c.removeChild(t);
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.cssText='opacity:0;transform:translateX(28px);transition:all .28s'; setTimeout(()=>c.contains(t)&&c.removeChild(t),290); }, dur);
+}
 
-        // Set up document styling
-        doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
-        doc.rect(0, 0, 210, 297, 'F');
+function setProgress(p) {
+  const b=$('pbar'); b.style.width=p+'%';
+  if(p>=100) setTimeout(()=>b.style.width='0',700);
+  const pct=$('loadPct'); if(pct) pct.textContent=Math.round(p)+'%';
+}
 
-        // Header - centered heading
-        doc.setFontSize(18);
-        doc.setTextColor(textColorRGB[0], textColorRGB[1], textColorRGB[2]);
-        const headingWidth = doc.getTextWidth(pdfHeading);
-        const centerX = (210 - headingWidth) / 2;
-        doc.text(pdfHeading, centerX, 25);
+function colCard(btn) {
+  const body = btn.closest('.card').querySelector('.cb-body');
+  body.classList.toggle('cls'); btn.classList.toggle('cls');
+}
 
-        // Language name - centered under heading
-        doc.setFontSize(12);
-        const languageName = `Language: ${language.toUpperCase()}`;
-        const languageWidth = doc.getTextWidth(languageName);
-        const languageCenterX = (210 - languageWidth) / 2;
-        doc.text(languageName, languageCenterX, 35);
+/* ─────────────────── PARTICLES ─────────────────── */
+function mkParticles() {
+  const c=$('particles');
+  for(let i=0;i<38;i++){
+    const p=document.createElement('div');
+    p.className='pt';
+    p.style.cssText=`left:${Math.random()*100}%;animation-delay:${Math.random()*22}s;animation-duration:${(Math.random()*13+13)}s;opacity:0`;
+    c.appendChild(p);
+  }
+}
 
-        // Code content
-        doc.setFontSize(fontSize);
-        const codeLines = codeInput.value.split('\n');
-        let y = 50;
-        const lineHeight = fontSize * 0.5;
-        const leftMargin = 20;
+/* ─────────────────── THEME ─────────────────── */
+function applyTheme(cls){
+  ['th-hacker','th-glass','th-neon','th-white','th-vscode','th-dracula'].forEach(t=>document.body.classList.remove(t));
+  if(cls) document.body.classList.add(cls);
+  S.theme=cls;
+  try{localStorage.setItem('cfp_theme',cls);}catch(e){}
+  updateWmPrev();
+}
 
-        codeLines.forEach((line, index) => {
-          if (y > 275) {
-            doc.addPage();
-            doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
-            doc.rect(0, 0, 210, 297, 'F');
-            y = 25;
-          }
+/* ─────────────────── AUTO-SAVE ─────────────────── */
+function autoSave(){
+  try{
+    localStorage.setItem('cfp_code', $('code').value);
+    localStorage.setItem('cfp_head', val('pdfHead'));
+    localStorage.setItem('cfp_lang', val('lang'));
+    localStorage.setItem('cfp_bg',   val('bgTheme'));
+    localStorage.setItem('cfp_fs',   val('fontSize'));
+    localStorage.setItem('cfp_hist', JSON.stringify(S.history.slice(0,20)));
+  }catch(e){}
+}
 
-          // Line numbers
-          doc.setTextColor(lineNumColorRGB[0], lineNumColorRGB[1], lineNumColorRGB[2]);
-          doc.text(String(index + 1).padStart(3, ' ') + ':', leftMargin, y);
+function restoreSession(){
+  try{
+    const code=localStorage.getItem('cfp_code'); if(code) $('code').value=code;
+    const head=localStorage.getItem('cfp_head'); if(head) $('pdfHead').value=head;
+    const lang=localStorage.getItem('cfp_lang'); if(lang) $('lang').value=lang;
+    const bg=localStorage.getItem('cfp_bg');     if(bg)   $('bgTheme').value=bg;
+    const fs=localStorage.getItem('cfp_fs');     if(fs){  $('fontSize').value=fs; $('fsDisp').textContent=fs+'px'; $('fsVal').textContent=fs; }
+    const hist=localStorage.getItem('cfp_hist'); if(hist){ S.history=JSON.parse(hist); renderHist(); }
+    const theme=localStorage.getItem('cfp_theme')||'';
+    $('themeSel').value=theme; applyTheme(theme);
+  }catch(e){}
+}
 
-          // Code line
-          doc.setTextColor(textColorRGB[0], textColorRGB[1], textColorRGB[2]);
-          const maxWidth = 150;
-          const wrappedLines = doc.splitTextToSize(line || ' ', maxWidth);
-          
-          wrappedLines.forEach((wrappedLine, wrapIndex) => {
-            if (wrapIndex === 0) {
-              doc.text(wrappedLine, leftMargin + 20, y);
-            } else {
-              y += lineHeight;
-              if (y > 275) {
-                doc.addPage();
-                doc.setFillColor(bgColorRGB[0], bgColorRGB[1], bgColorRGB[2]);
-                doc.rect(0, 0, 210, 297, 'F');
-                y = 25;
-              }
-              doc.text(wrappedLine, leftMargin + 20, y);
-            }
-          });
+/* ─────────────────── STATS ─────────────────── */
+function updateStats(){
+  const v=$('code').value;
+  const lines=v?v.split('\n').length:0;
+  const words=v.trim()?v.trim().split(/\s+/).length:0;
+  const chars=v.length;
+  const est=Math.max(1,Math.ceil(lines/48));
+  [$('sLines'),$('sbL')].forEach(e=>{if(e)e.textContent=lines});
+  [$('sWords'),$('sbW')].forEach(e=>{if(e)e.textContent=words});
+  [$('sChars'),$('sbC')].forEach(e=>{if(e)e.textContent=chars});
+  [$('sPages'),$('sbP')].forEach(e=>{if(e)e.textContent='~'+est});
+}
 
-          y += lineHeight;
-        });
+/* ─────────────────── PREVIEW ─────────────────── */
+const langBadgeMap={javascript:'JS',typescript:'TS',python:'PY',html:'HTML',css:'CSS',java:'JAVA',cpp:'C++',csharp:'C#',php:'PHP',ruby:'RB',go:'GO',rust:'RS',swift:'SWIFT',kotlin:'KT',sql:'SQL',bash:'SH',json:'JSON',xml:'XML',markdown:'MD',plaintext:'TXT'};
 
-        // Footer
-        const pageCount = doc.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          doc.setFontSize(9);
-          doc.setTextColor(lineNumColorRGB[0], lineNumColorRGB[1], lineNumColorRGB[2]);
-          doc.text('Generated with https://i-am-divyanshu.netlify.app/', 20, 287);
-          doc.text(`Page ${i} of ${pageCount}`, 170, 287);
-        }
+function updatePreview(){
+  const code=$('code').value||'// Start typing…';
+  const lang=val('lang');
+  const el=$('prev');
+  el.className=lang&&lang!=='plaintext'?`language-${lang}`:'';
+  el.textContent=code;
+  try{hljs.highlightElement(el);}catch(e){}
+  const b=$('lbadge'); if(b) b.textContent=langBadgeMap[lang]||lang.toUpperCase().slice(0,4);
+  updateStats();
+  updateWmPrev();
+  autoSave();
+}
 
-        // --- NEW PDF DOWNLOAD HANDLING FOR APPSGEYSER ---
-        const pdfDataUri = doc.output('datauristring'); // Use data URI instead of blob
-        const downloadLink = document.createElement('a');
-        
-        // First try the standard way
-        try {
-          downloadLink.href = pdfDataUri;
-          downloadLink.download = `${pdfHeading}.pdf`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-        } catch (e) {
-          // Fallback for AppsGeyser WebView
-          window.open(pdfDataUri, '_blank');
-        } finally {
-          setTimeout(() => {
-            if (downloadLink.parentNode) {
-              document.body.removeChild(downloadLink);
-            }
-          }, 1000);
-        }
-        // --- END MODIFIED PDF LOGIC ---
+function zoom(delta){
+  S.zoom=Math.min(160,Math.max(50,S.zoom+delta));
+  $('prevCanvas').style.transform=`scale(${S.zoom/100})`;
+  $('zoomLbl').textContent=S.zoom+'%';
+}
 
-        // Show success
-        setTimeout(() => {
-          loading.style.display = 'none';
-          success.style.display = 'block';
-          generateBtn.style.display = 'flex';
-          
-          setTimeout(() => {
-            success.style.display = 'none';
-          }, 3000);
-        }, 1000);
+/* ─────────────────── WATERMARK CONTROLS ─────────────────── */
+function wmToggle(){
+  const on=chk('wmOn');
+  const body=$('wmBody');
+  body.style.opacity=on?'1':'0.4';
+  body.style.pointerEvents=on?'':'none';
+  $('wmOverlay').style.display=on?'block':'none';
+  updateWmPrev();
+}
 
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        // Custom error handling
-        const errorToast = document.createElement('div');
-        errorToast.style.position = 'fixed';
-        errorToast.style.bottom = '20px';
-        errorToast.style.left = '50%';
-        errorToast.style.transform = 'translateX(-50%)';
-        errorToast.style.backgroundColor = '#ef4444';
-        errorToast.style.color = 'white';
-        errorToast.style.padding = '12px 24px';
-        errorToast.style.borderRadius = '8px';
-        errorToast.style.zIndex = '1000';
-        errorToast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        errorToast.textContent = 'Error generating PDF. Please try again.';
-        document.body.appendChild(errorToast);
-        
-        setTimeout(() => {
-          document.body.removeChild(errorToast);
-        }, 3000);
-        
-        loading.style.display = 'none';
-        generateBtn.style.display = 'flex';
-      }
-    });
+function wmType(t){
+  S.wmType=t;
+  $('wmTText').classList.toggle('on',t==='text');
+  $('wmTImg').classList.toggle('on',t==='image');
+  $('wmTQR').classList.toggle('on',t==='qr');
+  $('wmTextOpts').classList.toggle('sh',t!=='text');
+  $('wmImgOpts').classList.toggle('sh',t!=='image');
+  $('wmQROpts').classList.toggle('sh',t!=='qr');
+  updateWmPrev();
+}
 
-    // Initialize preview
-    updatePreview();
+function wmPos(p,btn){
+  S.wmPosition=p;
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  updateWmPrev();
+}
 
-    // Add smooth scrolling and entrance animations
-    document.addEventListener('DOMContentLoaded', function() {
-      // Hide preloader and show content after 3 seconds
+function wmImgUpload(input){
+  const f=input.files[0]; if(!f) return;
+  if(f.size>6*1024*1024){toast('Image too large (max 6MB)','err');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    S.wmImg=e.target.result;
+    const p=$('wmImgPrev'); p.innerHTML=`<img src="${e.target.result}" alt="wm"/>`;
+    updateWmPrev(); toast('Watermark image loaded','ok');
+  };
+  r.readAsDataURL(f);
+}
+
+function genQRDataURL(text, size) {
+  return new Promise(resolve => {
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+    document.body.appendChild(tmp);
+    try {
+      new QRCode(tmp, { text: text||'https://example.com', width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
       setTimeout(() => {
-        preloader.style.opacity = '0';
-        setTimeout(() => {
-          preloader.style.display = 'none';
-          mainContent.style.display = 'flex';
-          createParticles();
-          const cards = document.querySelectorAll('.card');
-          cards.forEach((card, index) => {
-            card.style.animationDelay = `${index * 0.1}s`;
-          });
-        }, 500);
-      }, 3000);
+        const img = tmp.querySelector('img') || tmp.querySelector('canvas');
+        let url = '';
+        if (img && img.tagName === 'IMG') url = img.src;
+        else if (img && img.tagName === 'CANVAS') url = img.toDataURL();
+        document.body.removeChild(tmp);
+        resolve(url);
+      }, 200);
+    } catch(e) { document.body.removeChild(tmp); resolve(''); }
+  });
+}
+
+function updateWmPrev(){
+  const overlay=$('wmOverlay');
+  if(!chk('wmOn')){ overlay.style.display='none'; return; }
+  overlay.style.display='block';
+  overlay.innerHTML='';
+
+  const opacity=intVal('wmOp')/100;
+  const rot=intVal('wmRot');
+  const pos=S.wmPosition;
+
+  const posCSS={
+    'center':    'top:50%;left:50%;transform:translate(-50%,-50%)',
+    'top-left':  'top:10%;left:8%',
+    'top-right': 'top:10%;right:8%;left:auto',
+    'bot-left':  'bottom:10%;top:auto;left:8%',
+    'bot-right': 'bottom:10%;top:auto;right:8%;left:auto',
+    'diagonal':  'top:50%;left:50%;transform:translate(-50%,-50%)',
+  };
+
+  const finalRot = pos==='diagonal'?-45:rot;
+  const wrapper=document.createElement('div');
+  wrapper.style.cssText=`position:absolute;pointer-events:none;opacity:${opacity};${posCSS[pos]||posCSS['center']};transform:${(posCSS[pos]||'').includes('translate')?'translate(-50%,-50%)':''} rotate(${finalRot}deg)`;
+
+  if(S.wmType==='text'){
+    const sz=intVal('wmSz');
+    const el=document.createElement('div');
+    const bold=chk('wmBold');
+    const italic=chk('wmItalic');
+    el.style.cssText=`font-size:${sz*0.32}px;color:${val('wmClr')};font-family:${val('wmFont')};font-weight:${bold?700:400};font-style:${italic?'italic':'normal'};white-space:nowrap;letter-spacing:3px;user-select:none`;
+    el.textContent=val('wmTxt')||'WATERMARK';
+    wrapper.appendChild(el);
+  } else if(S.wmType==='image' && S.wmImg){
+    const img=document.createElement('img');
+    img.src=S.wmImg; img.style.cssText=`width:${intVal('wmISz')}px;height:auto;display:block;user-select:none`;
+    wrapper.appendChild(img);
+  } else if(S.wmType==='qr'){
+    const data=val('wmQRData')||'https://example.com';
+    const sz=intVal('wmQRSz');
+    const el=document.createElement('div');
+    el.style.cssText=`width:${sz}px;height:${sz}px;user-select:none`;
+    const qrPrev=$('qrRender');
+    if(qrPrev){ qrPrev.innerHTML=''; $('qrBox').style.display='block'; }
+    if(typeof QRCode!=='undefined'){
+      try{
+        new QRCode(el,{text:data,width:sz,height:sz,correctLevel:QRCode.CorrectLevel.M});
+        if(qrPrev){ const el2=document.createElement('div'); el2.innerHTML=''; try{new QRCode(el2,{text:data,width:80,height:80});}catch(e){} qrPrev.appendChild(el2); }
+      }catch(e){}
+    }
+    wrapper.appendChild(el);
+  }
+
+  overlay.appendChild(wrapper);
+}
+
+/* ─────────────────── EDITOR ACTIONS ─────────────────── */
+function copyCode(){
+  const txt=$('code').value;
+  if(!txt.trim()){toast('Nothing to copy','wrn');return;}
+  navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard!','ok')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('Copied!','ok');
+  });
+}
+
+function clearEd(){
+  if(!$('code').value.trim()) return;
+  if(confirm('Clear the editor? This cannot be undone.')){
+    $('code').value=''; updatePreview(); toast('Editor cleared','inf');
+  }
+}
+
+function fmtCode(){
+  const ta=$('code');
+  const lines=ta.value.split('\n');
+  let indent=0;
+  const out=lines.map(line=>{
+    const t=line.trim();
+    if(!t) return '';
+    const closeStart=(t.match(/^[}\])]/))||[];
+    indent=Math.max(0,indent-closeStart.length);
+    const result='  '.repeat(indent)+t;
+    const opens=(t.match(/[{[(][^)}\]]*$/g)||[]).length;
+    const closes=(t.match(/[)}\]][^{[(]*$/g)||[]).length;
+    indent=Math.max(0,indent+opens-closes);
+    return result;
+  });
+  ta.value=out.join('\n');
+  updatePreview(); toast('Code formatted','ok');
+}
+
+async function aiFormat(){
+  const code=$('code').value.trim();
+  if(!code){toast('No code to format','wrn');return;}
+  if(code.length>8000){toast('Code too long for AI format (max 8000 chars)','wrn');return;}
+  toast('AI formatting… ✨','inf',5000);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:`Format and clean up this code. Return ONLY the formatted code with no explanation, no markdown, no backticks:\n\n${code}`}]
+      })
     });
-  </script>
+    const data=await res.json();
+    const formatted=(data.content||[]).find(b=>b.type==='text')?.text||'';
+    if(formatted){ $('code').value=formatted.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,''); updatePreview(); toast('AI formatting applied ✨','ok'); }
+    else toast('AI format: no response','wrn');
+  }catch(e){ toast('AI format unavailable','wrn'); }
+}
+
+function toggleFS(){
+  const ta=$('code');
+  ta.classList.toggle('fs');
+  if(ta.classList.contains('fs')){ ta.focus(); toast('Esc to exit fullscreen','inf',2000); }
+}
+
+/* ─────────────────── FILE IMPORT ─────────────────── */
+const extLang={js:'javascript',ts:'typescript',py:'python',java:'java',cpp:'cpp',c:'cpp',cs:'csharp',html:'html',htm:'html',css:'css',php:'php',rb:'ruby',go:'go',rs:'rust',swift:'swift',kt:'kotlin',sql:'sql',sh:'bash',bash:'bash',json:'json',xml:'xml',md:'markdown',txt:'plaintext'};
+
+function fileImport(input){
+  const f=input.files[0]; if(!f) return;
+  if(f.size>3*1024*1024){toast('File too large (max 3MB)','err');return;}
+  const ext=f.name.split('.').pop().toLowerCase();
+  if(!Object.keys(extLang).includes(ext)&&ext!=='txt'){toast('Unsupported file type','wrn');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    $('code').value=e.target.result;
+    const dl=extLang[ext]||'plaintext';
+    $('lang').value=dl;
+    $('pdfHead').value=f.name.replace(/\.[^/.]+$/,'');
+    updatePreview(); toast(`Imported: ${f.name}`,'ok');
+  };
+  r.onerror=()=>toast('Could not read file','err');
+  r.readAsText(f);
+}
+
+/* ─────────────────── DRAG & DROP ─────────────────── */
+function setupDnD(){
+  const ta=$('code');
+  ta.addEventListener('dragover',e=>{e.preventDefault();ta.style.borderColor='var(--acc)'});
+  ta.addEventListener('dragleave',()=>{ta.style.borderColor=''});
+  ta.addEventListener('drop',e=>{
+    e.preventDefault();ta.style.borderColor='';
+    const f=e.dataTransfer.files[0];
+    if(f) fileImport({files:[f]});
+  });
+  const fdz=$('fileDZ');
+  fdz.addEventListener('dragover',e=>{e.preventDefault();fdz.classList.add('drag')});
+  fdz.addEventListener('dragleave',()=>fdz.classList.remove('drag'));
+  fdz.addEventListener('drop',e=>{
+    e.preventDefault();fdz.classList.remove('drag');
+    const f=e.dataTransfer.files[0];
+    if(f) fileImport({files:[f]});
+  });
+  const wdz=$('wmDZ');
+  if(wdz){
+    wdz.addEventListener('dragover',e=>{e.preventDefault();wdz.classList.add('drag')});
+    wdz.addEventListener('dragleave',()=>wdz.classList.remove('drag'));
+    wdz.addEventListener('drop',e=>{
+      e.preventDefault();wdz.classList.remove('drag');
+      const f=e.dataTransfer.files[0];
+      if(f&&f.type.startsWith('image/')) wmImgUpload({files:[f]});
+    });
+  }
+}
+
+/* ─────────────────── HISTORY ─────────────────── */
+function addHist(name){
+  S.history.unshift({name,date:new Date().toLocaleString()});
+  if(S.history.length>20) S.history.pop();
+  renderHist(); autoSave();
+}
+function renderHist(){
+  const l=$('histList');
+  if(!S.history.length){l.innerHTML='<div class="hempty">No downloads yet</div>';return;}
+  l.innerHTML=S.history.map(i=>`<div class="hi"><span class="hi-name" title="${i.name}">${i.name}</span><span class="hi-dt">${i.date}</span></div>`).join('');
+}
+function clearHist(){
+  S.history=[];renderHist();
+  try{localStorage.removeItem('cfp_hist');}catch(e){}
+  toast('History cleared','inf');
+}
+
+/* ─────────────────── EXPORTS ─────────────────── */
+function dlBlob(content,name,mime){
+  const b=new Blob([content],{type:mime});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(u);document.body.removeChild(a);},1000);
+}
+
+function expTXT(){
+  const c=$('code').value;
+  if(!c.trim()){toast('No code to export','wrn');return;}
+  const n=(val('pdfHead')||'code')+'.txt';
+  dlBlob(c,n,'text/plain');
+  toast('Exported as .txt','ok'); addHist(n);
+}
+
+function expHTML(){
+  const c=$('code').value;
+  if(!c.trim()){toast('No code to export','wrn');return;}
+  const n=(val('pdfHead')||'code')+'.html';
+  const esc=c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const title=val('pdfHead')||'Code';
+  const html=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#1e1e1e;color:#d4d4d4;font-family:'Fira Code',monospace;padding:2.5rem;line-height:1.7;font-size:14px}pre{white-space:pre-wrap;word-break:break-all}h1{color:#7c3aed;margin-bottom:1rem;font-family:Inter,sans-serif;font-size:1.4rem}footer{margin-top:2rem;font-size:.75rem;color:#555;font-family:Inter,sans-serif}</style></head><body><h1>${title}</h1><pre>${esc}</pre><footer>Exported by CodeForge Pro</footer></body></html>`;
+  dlBlob(html,n,'text/html');
+  toast('Exported as .html','ok'); addHist(n);
+}
+
+function expPNG(){
+  const c=$('code').value;
+  if(!c.trim()){toast('No code to export','wrn');return;}
+  const n=(val('pdfHead')||'code')+'.png';
+  const lines=c.split('\n');
+  const lineH=22;const px=28;const py=24;
+  const maxL=Math.max(...lines.map(l=>l.length),40);
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(700,maxL*8.5+px*2+50);
+  canvas.height=lines.length*lineH+py*2+48;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#1e1e1e';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#2d2d2d';ctx.fillRect(0,0,canvas.width,40);
+  [[16,'#ff5f57'],[36,'#febc2e'],[56,'#28c840']].forEach(([x,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,20,7,0,Math.PI*2);ctx.fill()});
+  ctx.font='bold 13px Inter,sans-serif';ctx.fillStyle='#888';ctx.fillText(val('pdfHead')||'code',76,24);
+  ctx.font='13px "Fira Code",monospace';
+  lines.forEach((line,i)=>{
+    const y=py+48+i*lineH;
+    ctx.fillStyle='#555';ctx.fillText(String(i+1).padStart(4,' '),px,y);
+    ctx.fillStyle='#d4d4d4';ctx.fillText(line.replace(/\t/g,'  '),px+48,y);
+  });
+  canvas.toBlob(blob=>{
+    const u=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=u;a.download=n;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(u);document.body.removeChild(a);},1000);
+    toast('Exported as .png','ok'); addHist(n);
+  });
+}
+
+/* ─────────────────── PDF GENERATION ─────────────────── */
+async function genPDF(){
+  const code=$('code').value.trim();
+  if(!code){
+    $('code').style.cssText='border-color:var(--err);box-shadow:0 0 0 3px rgba(239,68,68,.22)';
+    setTimeout(()=>$('code').style.cssText='',2500);
+    toast('Please enter some code first','err');return;
+  }
+  if(typeof window.jspdf==='undefined'){toast('PDF library not loaded','err');return;}
+
+  const ov=$('loadOverlay');
+  ov.classList.add('on');
+  $('loadTxt').textContent='Initializing…';
+  setProgress(10);
+
+  try{
+    const {jsPDF}=window.jspdf;
+    const head=val('pdfHead')||'Code Document';
+    const lang=val('lang');
+    const bgT=val('bgTheme');
+    const fs=parseInt(val('fontSize'))||10;
+    const pgSz=val('pageSize')||'a4';
+    const ori=val('orient')||'portrait';
+    const mg=parseInt(val('margin'))||15;
+    const hdrTxt=val('hdrTxt');
+    const ftrTxt=val('ftrTxt')||'Generated by CodeForge Pro';
+    const pgNS=val('pgNumStyle');
+    const showLang=chk('showLang');
+    const showLN=chk('showLineNums');
+    const wmOn=chk('wmOn');
+
+    /* Page dimensions */
+    const pgDims={a4:[210,297],letter:[215.9,279.4],legal:[215.9,355.6]};
+    let [pW,pH]=pgDims[pgSz]||pgDims.a4;
+    if(ori==='landscape')[pW,pH]=[pH,pW];
+
+    const doc=new jsPDF({unit:'mm',format:pgSz,orientation:ori});
+
+    /* Color themes */
+    const bgPalette={
+      dark:     {bg:[18,18,28],  txt:[215,215,225],ln:[90,90,110], hdr:[160,130,230],bdr:[40,40,60]},
+      white:    {bg:[255,255,255],txt:[22,22,35],   ln:[140,140,155],hdr:[80,60,180], bdr:[230,230,240]},
+      solarized:{bg:[0,43,54],   txt:[131,148,150],ln:[88,110,117], hdr:[38,139,210],bdr:[0,60,75]},
+      monokai:  {bg:[39,40,34],  txt:[248,248,242],ln:[117,113,94], hdr:[166,226,46],bdr:[55,56,50]},
+      dracula:  {bg:[40,42,54],  txt:[248,248,242],ln:[98,114,164], hdr:[255,121,198],bdr:[55,58,80]},
+      nord:     {bg:[46,52,64],  txt:[236,239,244],ln:[129,161,193],hdr:[136,192,208],bdr:[59,66,82]},
+    };
+    const clr=bgPalette[bgT]||bgPalette.dark;
+
+    $('loadTxt').textContent='Drawing page chrome…'; setProgress(25);
+
+    /* ── drawPageChrome ── */
+    function drawChrome(pg,total){
+      doc.setFillColor(...clr.bg);doc.rect(0,0,pW,pH,'F');
+      /* header bar */
+      const hdrH=mg-1;
+      doc.setFillColor(clr.bg[0]+8,clr.bg[1]+8,clr.bg[2]+12);
+      doc.rect(0,0,pW,hdrH,'F');
+      doc.setDrawColor(...clr.bdr);doc.setLineWidth(0.25);
+      doc.line(0,hdrH,pW,hdrH);
+      doc.setFontSize(9);doc.setTextColor(...clr.hdr);
+      doc.text(hdrTxt||head,mg,hdrH-3);
+      if(showLang){
+        const lt=lang.toUpperCase();
+        doc.setFontSize(7.5);doc.setTextColor(...clr.ln);
+        doc.text(lt,pW-mg-doc.getTextWidth(lt),hdrH-3);
+      }
+      /* footer */
+      doc.setFontSize(7.5);doc.setTextColor(...clr.ln);
+      doc.line(0,pH-mg+2,pW,pH-mg+2);
+      doc.text(ftrTxt,mg,pH-4);
+      if(pgNS!=='none'){
+        const pt=`Page ${pg} of ${total}`;
+        const pw2=doc.getTextWidth(pt);
+        if(pgNS==='center') doc.text(pt,(pW-pw2)/2,pH-4);
+        else doc.text(pt,pW-mg-pw2,pH-4);
+      }
+    }
+
+    /* ── drawWatermark ── */
+    async function drawWatermark(){
+      if(!wmOn) return;
+      const opacity=intVal('wmOp')/100;
+      const rot=intVal('wmRot');
+      const pos=S.wmPosition;
+      const posPts={
+        'center':   [pW/2,pH/2],
+        'top-left': [pW*.18,pH*.18],
+        'top-right':[pW*.82,pH*.18],
+        'bot-left': [pW*.18,pH*.82],
+        'bot-right':[pW*.82,pH*.82],
+        'diagonal': [pW/2,pH/2],
+      };
+      const [cx,cy]=posPts[pos]||posPts['center'];
+      const finalRot=pos==='diagonal'?-45:rot;
+
+      if(S.wmType==='text'){
+        const wmSz=intVal('wmSz');
+        const wc=val('wmClr');
+        const r=parseInt(wc.slice(1,3),16),g=parseInt(wc.slice(3,5),16),b2=parseInt(wc.slice(5,7),16);
+        const bold=chk('wmBold'),italic=chk('wmItalic');
+        let sty='normal';
+        if(bold&&italic)sty='bolditalic';else if(bold)sty='bold';else if(italic)sty='italic';
+        try{
+          doc.saveGraphicsState();
+          doc.setGState(new doc.GState({opacity}));
+          doc.setFontSize(wmSz);
+          doc.setTextColor(r,g,b2);
+          doc.setFont('helvetica',sty);
+          doc.text(val('wmTxt')||'WATERMARK',cx,cy,{align:'center',angle:-finalRot});
+          doc.restoreGraphicsState();
+        }catch(e){console.warn('WM text error:',e);}
+      } else if(S.wmType==='image'&&S.wmImg){
+        const sp=intVal('wmISz')/100;
+        const iW=pW*sp,iH=iW*0.5;
+        const fmt=S.wmImg.includes('image/png')?'PNG':'JPEG';
+        try{
+          doc.saveGraphicsState();
+          doc.setGState(new doc.GState({opacity}));
+          doc.addImage(S.wmImg,fmt,cx-iW/2,cy-iH/2,iW,iH,undefined,'NONE',finalRot);
+          doc.restoreGraphicsState();
+        }catch(e){console.warn('WM img error:',e);}
+      } else if(S.wmType==='qr'){
+        const qrData=val('wmQRData')||'https://example.com';
+        const qrSzPct=intVal('wmQRSz')/100;
+        const qrSz=Math.round(pW*qrSzPct);
+        if(!S.wmQRDataURL){
+          S.wmQRDataURL=await genQRDataURL(qrData,Math.max(100,qrSz*3.78));
+        }
+        if(S.wmQRDataURL){
+          try{
+            doc.saveGraphicsState();
+            doc.setGState(new doc.GState({opacity}));
+            doc.addImage(S.wmQRDataURL,'PNG',cx-qrSz/2,cy-qrSz/2,qrSz,qrSz,undefined,'NONE',finalRot);
+            doc.restoreGraphicsState();
+          }catch(e){console.warn('WM QR error:',e);}
+        }
+      }
+      doc.setFont('courier','normal');
+    }
+
+    /* ── Code layout ── */
+    $('loadTxt').textContent='Rendering code…'; setProgress(40);
+    doc.setFont('courier','normal');
+    doc.setFontSize(fs);
+    const lH=fs*0.44;
+    const cLeft=mg;
+    const cWidth=pW-mg*2-(showLN?16:0);
+    const startY=mg+5;
+    const endY=pH-mg;
+
+    const codeLines=code.split('\n');
+    let curPage=1,y=startY;
+    drawChrome(1,1);
+
+    for(let i=0;i<codeLines.length;i++){
+      if(y>endY){
+        curPage++;doc.addPage();drawChrome(curPage,curPage);y=startY;
+      }
+      if(showLN){
+        doc.setFontSize(fs*0.82);doc.setTextColor(...clr.ln);
+        doc.text(String(i+1).padStart(4,' '),cLeft,y);
+      }
+      doc.setFontSize(fs);doc.setTextColor(...clr.txt);
+      const lnOffset=showLN?16:0;
+      const wrapped=doc.splitTextToSize(codeLines[i]||' ',cWidth);
+      wrapped.forEach((wl,wi)=>{
+        if(wi>0){
+          y+=lH;
+          if(y>endY){curPage++;doc.addPage();drawChrome(curPage,curPage);y=startY;}
+        }
+        doc.text(wl,cLeft+lnOffset,y);
+      });
+      y+=lH;
+      if(i%80===0) setProgress(40+Math.round((i/codeLines.length)*35));
+    }
+
+    setProgress(80); $('loadTxt').textContent='Applying watermarks…';
+    // Pre-gen QR if needed
+    if(wmOn&&S.wmType==='qr') S.wmQRDataURL=await genQRDataURL(val('wmQRData')||'https://example.com',240);
+
+    const total=doc.getNumberOfPages();
+    for(let p=1;p<=total;p++){
+      doc.setPage(p);
+      drawChrome(p,total);
+      await drawWatermark();
+      setProgress(80+Math.round((p/total)*18));
+    }
+
+    setProgress(99); $('loadTxt').textContent='Saving file…';
+    const fname=(head.replace(/[^a-z0-9_\-\s]/gi,'_').trim()||'code')+'.pdf';
+
+    try{
+      const uri=doc.output('datauristring');
+      const a=document.createElement('a');a.href=uri;a.download=fname;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{if(a.parentNode)document.body.removeChild(a);},1200);
+    }catch(e){
+      const blob=doc.output('blob');window.open(URL.createObjectURL(blob),'_blank');
+    }
+
+    addHist(fname);
+    setProgress(100);
+    toast(`✓ PDF saved: ${fname}`,'ok',4500);
+
+  }catch(err){
+    console.error(err);
+    toast('PDF error: '+(err.message||'Unknown error'),'err',5000);
+    setProgress(0);
+  }finally{
+    $('loadOverlay').classList.remove('on');
+  }
+}
+
+/* ─────────────────── KEYBOARD SHORTCUTS ─────────────────── */
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();genPDF();}
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='C'){e.preventDefault();copyCode();}
+  if(e.key==='Escape'){
+    const ta=$('code');
+    if(ta&&ta.classList.contains('fs')) ta.classList.remove('fs');
+  }
+});
+
+/* ─────────────────── INIT ─────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+  $('themeSel').addEventListener('change',function(){applyTheme(this.value)});
+
+  $('fontSize').addEventListener('input',function(){
+    $('fsDisp').textContent=this.value+'px';
+    $('fsVal').textContent=this.value;
+    updatePreview();
+  });
+  $('margin').addEventListener('input',function(){
+    $('mgDisp').textContent=this.value+'mm';
+    $('mgVal').textContent=this.value;
+  });
+
+  $('code').addEventListener('input',updatePreview);
+  $('lang').addEventListener('change',updatePreview);
+
+  /* Tab key in editor */
+  $('code').addEventListener('keydown',e=>{
+    if(e.key==='Tab'){
+      e.preventDefault();
+      const ta=e.target,s=ta.selectionStart;
+      ta.value=ta.value.substring(0,s)+'  '+ta.value.substring(ta.selectionEnd);
+      ta.selectionStart=ta.selectionEnd=s+2;
+    }
+  });
+
+  setupDnD();
+  restoreSession();
+  updatePreview();
+  wmToggle();
+  $('wmBody').style.opacity='0.4';
+  $('wmBody').style.pointerEvents='none';
+
+  /* Preloader exit */
+  setTimeout(()=>{
+    const pl=$('preloader');
+    pl.style.opacity='0';
+    setTimeout(()=>{
+      pl.style.display='none';
+      $('mainEl').style.display='flex';
+      mkParticles();
+      document.querySelectorAll('.card').forEach((c,i)=>c.style.animationDelay=`${i*.06}s`);
+    },520);
+  },2700);
+});
+</script>
 </body>
 </html>
