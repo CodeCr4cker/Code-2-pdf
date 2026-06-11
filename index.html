@@ -1209,30 +1209,46 @@ async function genPDF(){
     $('loadTxt').textContent='Drawing page chrome…'; setProgress(25);
 
     /* ── drawPageChrome ── */
-    function drawChrome(pg,total){
-      doc.setFillColor(...clr.bg);doc.rect(0,0,pW,pH,'F');
-      /* header bar */
-      const hdrH=mg-1;
-      doc.setFillColor(clr.bg[0]+8,clr.bg[1]+8,clr.bg[2]+12);
-      doc.rect(0,0,pW,hdrH,'F');
-      doc.setDrawColor(...clr.bdr);doc.setLineWidth(0.25);
-      doc.line(0,hdrH,pW,hdrH);
-      doc.setFontSize(9);doc.setTextColor(...clr.hdr);
-      doc.text(hdrTxt||head,mg,hdrH-3);
-      if(showLang){
-        const lt=lang.toUpperCase();
-        doc.setFontSize(7.5);doc.setTextColor(...clr.ln);
-        doc.text(lt,pW-mg-doc.getTextWidth(lt),hdrH-3);
+    // withBg=true: paint background + bars (first draw per page)
+    // withBg=false: only labels (footer page count update, no bg overpaint)
+    function drawChrome(pg, total, withBg=true){
+      if(withBg){
+        // Full page background
+        doc.setFillColor(...clr.bg);
+        doc.rect(0, 0, pW, pH, 'F');
+        // Header band
+        const hBand = mg + 2;
+        doc.setFillColor(Math.min(255,clr.bg[0]+10), Math.min(255,clr.bg[1]+10), Math.min(255,clr.bg[2]+16));
+        doc.rect(0, 0, pW, hBand, 'F');
+        // Footer band
+        doc.setFillColor(...clr.bg);
+        doc.rect(0, pH - mg - 2, pW, mg + 2, 'F');
+      } else {
+        // withBg=false: still repaint footer band to erase stale page numbers
+        doc.setFillColor(...clr.bg);
+        doc.rect(0, pH - mg - 2, pW, mg + 2, 'F');
       }
-      /* footer */
-      doc.setFontSize(7.5);doc.setTextColor(...clr.ln);
-      doc.line(0,pH-mg+2,pW,pH-mg+2);
-      doc.text(ftrTxt,mg,pH-4);
-      if(pgNS!=='none'){
-        const pt=`Page ${pg} of ${total}`;
-        const pw2=doc.getTextWidth(pt);
-        if(pgNS==='center') doc.text(pt,(pW-pw2)/2,pH-4);
-        else doc.text(pt,pW-mg-pw2,pH-4);
+      // Separator lines
+      doc.setDrawColor(...clr.bdr);
+      doc.setLineWidth(0.25);
+      doc.line(mg, mg + 2, pW - mg, mg + 2);
+      doc.line(mg, pH - mg, pW - mg, pH - mg);
+      // Header label
+      doc.setFontSize(9); doc.setTextColor(...clr.hdr);
+      doc.text(hdrTxt || head, mg, mg - 1);
+      if(showLang){
+        const lt = lang.toUpperCase();
+        doc.setFontSize(7.5); doc.setTextColor(...clr.ln);
+        doc.text(lt, pW - mg - doc.getTextWidth(lt), mg - 1);
+      }
+      // Footer label
+      doc.setFontSize(7.5); doc.setTextColor(...clr.ln);
+      doc.text(ftrTxt, mg, pH - 4);
+      if(pgNS !== 'none'){
+        const pt = `Page ${pg} of ${total}`;
+        const pw2 = doc.getTextWidth(pt);
+        if(pgNS === 'center') doc.text(pt, (pW - pw2) / 2, pH - 4);
+        else doc.text(pt, pW - mg - pw2, pH - 4);
       }
     }
 
@@ -1300,50 +1316,81 @@ async function genPDF(){
 
     /* ── Code layout ── */
     $('loadTxt').textContent='Rendering code…'; setProgress(40);
-    doc.setFont('courier','normal');
-    doc.setFontSize(fs);
-    const lH=fs*0.44;
-    const cLeft=mg;
-    const cWidth=pW-mg*2-(showLN?16:0);
-    const startY=mg+5;
-    const endY=pH-mg;
 
-    const codeLines=code.split('\n');
-    let curPage=1,y=startY;
-    drawChrome(1,1);
+    // Font size in jsPDF points; line height in mm
+    // 1 pt = 0.3528 mm. Add generous leading so lines don't overlap.
+    const ptToMm = 0.3528;
+    const lH = fs * ptToMm * 1.55;   // line height: font size × 1.55 leading
+    const lnNumW = showLN ? 14 : 0;  // mm reserved for line numbers
+    const cLeft = mg + lnNumW;        // code text x start
+    const cWidth = pW - mg - cLeft - 2; // usable text width
+    const headerH = mg + 2;           // top of content area, below header bar
+    const startY = headerH + lH;      // first line baseline (one lH below header)
+    const endY = pH - mg - 4;         // bottom boundary above footer
+
+    doc.setFont('courier','normal');
+    const codeLines = code.split('\n');
+    let curPage = 1, y = startY;
+
+    // Snapshot: track which pages exist so we draw chrome only once per page
+    const pageChromeDone = new Set();
+
+    function ensureChrome(pg) {
+      if (!pageChromeDone.has(pg)) { drawChrome(pg, pg); pageChromeDone.add(pg); }
+    }
+
+    ensureChrome(1);
 
     for(let i=0;i<codeLines.length;i++){
       if(y>endY){
-        curPage++;doc.addPage();drawChrome(curPage,curPage);y=startY;
+        curPage++;
+        doc.addPage();
+        ensureChrome(curPage);
+        y=startY;
       }
+      // Line number
       if(showLN){
-        doc.setFontSize(fs*0.82);doc.setTextColor(...clr.ln);
-        doc.text(String(i+1).padStart(4,' '),cLeft,y);
+        doc.setFontSize(fs*0.82);
+        doc.setTextColor(...clr.ln);
+        doc.text(String(i+1).padStart(4,' '), mg, y);
       }
-      doc.setFontSize(fs);doc.setTextColor(...clr.txt);
-      const lnOffset=showLN?16:0;
-      const wrapped=doc.splitTextToSize(codeLines[i]||' ',cWidth);
-      wrapped.forEach((wl,wi)=>{
+      // Code text
+      doc.setFontSize(fs);
+      doc.setTextColor(...clr.txt);
+
+      // Replace tabs with spaces so jsPDF doesn't skip them
+      const lineText = (codeLines[i]||'').replace(/\t/g,'  ');
+      const wrapped = doc.splitTextToSize(lineText||' ', cWidth);
+
+      wrapped.forEach((wl, wi)=>{
         if(wi>0){
-          y+=lH;
-          if(y>endY){curPage++;doc.addPage();drawChrome(curPage,curPage);y=startY;}
+          y += lH;
+          if(y>endY){
+            curPage++;
+            doc.addPage();
+            ensureChrome(curPage);
+            y=startY;
+          }
         }
-        doc.text(wl,cLeft+lnOffset,y);
+        doc.text(wl, cLeft, y);
       });
-      y+=lH;
-      if(i%80===0) setProgress(40+Math.round((i/codeLines.length)*35));
+      y += lH;
+      if(i%60===0) setProgress(40+Math.round((i/codeLines.length)*38));
     }
 
     setProgress(80); $('loadTxt').textContent='Applying watermarks…';
+
     // Pre-gen QR if needed
     if(wmOn&&S.wmType==='qr') S.wmQRDataURL=await genQRDataURL(val('wmQRData')||'https://example.com',240);
 
-    const total=doc.getNumberOfPages();
-    for(let p=1;p<=total;p++){
+    // Second pass: update footer page counts + apply watermarks (NO background repaint)
+    const total = doc.getNumberOfPages();
+    for(let p = 1; p <= total; p++){
       doc.setPage(p);
-      drawChrome(p,total);
+      // Use withBg=false so we only repaint the footer band + labels, not the full background
+      drawChrome(p, total, false);
       await drawWatermark();
-      setProgress(80+Math.round((p/total)*18));
+      setProgress(80 + Math.round((p / total) * 18));
     }
 
     setProgress(99); $('loadTxt').textContent='Saving file…';
